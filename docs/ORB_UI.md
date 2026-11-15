@@ -225,9 +225,9 @@ policy has blocked this file"), whereas the venv's `pythonw.exe` is Authenticode
   computer-control regression green.
 
 ## Measured performance (this machine, 150 % DPI)
-- Startup via shortcut: orb visible **5.6 s**, Whisper 6.7 s, Claude connected 16.4 s (all background; orb usable immediately).
+- Historical pre-Gnani startup timings: orb visible **5.6 s**, speech service initialized 6.7 s, Claude connected 16.4 s (all background; orb usable immediately).
 - Activation click → panel: 120–170 ms. Idle CPU (orb collapsed, JARVIS idle): **0.2 % of one core** total across
-  `pythonw` + WebView2 processes. Memory: ~105 MB `pythonw` (Whisper loaded) + WebView2 renderer/GPU processes ~300 MB
+  `pythonw` + WebView2 processes. Memory: ~105 MB `pythonw` + WebView2 renderer/GPU processes ~300 MB
   (shared Edge runtime).
 
 ## Fixed along the way

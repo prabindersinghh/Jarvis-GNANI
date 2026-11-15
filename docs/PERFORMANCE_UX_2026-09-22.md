@@ -4,19 +4,19 @@ Goal: make JARVIS *feel* immediate and conversational, and *actually* reduce lat
 JEV (reflex), the router, verification, privacy, safety, the ₹1,000/month JEV ceiling, memory, TTS, daily history, or the
 RL hook. Measured first; optimized where the measurement pointed; reported honestly.
 
-## Current baseline
-Instrumented with a new offline harness `benchmarks/latency/bench.py` → `before.json`/`before.md` (§1). It measures only
-legs that can be timed without moving the mouse, playing audio, or launching apps, so it was safe to run while the user
-worked. Baseline highlights (this machine, Intel, CPU int8 Whisper):
-- Whisper `base.en` on 3.9 s audio: **~0.72 s idle**, inflating to 3.4–3.6 s under concurrent user load; model load ~8 s once at startup.
-- SAPI synth: clause ~90 ms, whole 3-sentence reply ~100–260 ms (synthesis is *not* the bottleneck).
+## Historical pre-Gnani baseline
+The original offline harness `benchmarks/latency/before.json`/`before.md` measured the former local speech engines as well
+as application legs. Those speech timings describe that previous implementation only; they are not Prisma/Timbre
+benchmarks. The current offline harness excludes hosted Gnani calls; provider timings belong in live tests.
+- Former local recognizer on 3.9 s audio: **~0.72 s idle**, inflating to 3.4–3.6 s under concurrent user load; model load ~8 s once at startup.
+- Former local synthesizer: clause ~90 ms, whole 3-sentence reply ~100–260 ms (synthesis was *not* the bottleneck).
 - UIA observe (foreground window): 68 ms–1.7 s depending on the window; OCR ~0.7 s idle (7–10× UIA); screenshot ~50 ms.
 - JEV `.pick()` warm ~0.38 s + ~0.2–0.36 s cold handshake on the first call.
 - Legacy end-of-turn: a **single fixed 0.9 s** trailing-silence rule.
 - Claude first token 2.9–11 s; full task turns 15–75 s (`benchmarks/tasks_*.json`).
 
 ## Bottleneck analysis
-Perceived latency was dominated by **dead air after the user stops speaking**: fixed 0.9 s endpoint + serial Whisper +
+Perceived latency was dominated by **dead air after the user stops speaking**: fixed 0.9 s endpoint + serial transcription +
 *nothing spoken until Claude's entire reply completed* (first token alone is 2.9–11 s). Real completion latency is
 dominated by Claude turn count/wall-time (already reduced by earlier batching work) and by expensive OCR/vision when a
 cheaper check would do. The voice loop also **could not be interrupted by voice** (mic frames were dropped while
@@ -78,9 +78,9 @@ and **no more hesitation cut-offs**; instant ack **~90–220 ms vs Claude first 
 larger on long ones, never double-speaks).
 
 ## UX results
-Orb activation and mic readiness were already warm at startup (Whisper/mic/TTS pre-loaded; orb shown immediately). Added:
+Orb activation and mic readiness were already warm at startup (mic/TTS initialized; orb shown immediately). Added:
 speech begins during generation, a spoken ack for longer tasks, and voice interruption — a full-duplex *feel* without
-streaming raw audio to any cloud model (all audio stays local, §43).
+streaming raw audio. User audio is sent to Gnani Prisma, and reply text to Gnani Timbre.
 
 ## Regressions found / fixed
 - Falsy-`0.0` timestamp bug in the endpointer (harness-caught) — fixed with explicit `is None` checks.
@@ -89,8 +89,7 @@ streaming raw audio to any cloud model (all audio stays local, §43).
   `pending`, `set_monitor`) — updated. Full non-live suite: **81 passed, 23 live skipped**.
 
 ## Remaining bottlenecks / left for an away session
-- Whisper transcription (~0.7 s idle) is the biggest per-turn *local* cost; a `tiny.en` comparison is wired
-  (`--compare-models`) but not adopted without an accuracy check on the user's own speech.
+- Speech provider latency is network-dependent and excluded from the offline latency harness.
 - OCR is ~7–10× UIA — keep preferring cheap verification (already the policy).
 - Live full-duplex voice, live barge-in timing, and live desktop task regressions **were not run** (they play audio /
   move the mouse and would disturb the user). Run `pytest tests -m live` and a live voice pass when the user is away.

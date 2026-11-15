@@ -1,7 +1,7 @@
 # JARVIS — project instructions for Claude Code
 
 JARVIS is the user's personal Windows computer agent. **Claude Code is the only brain**; the local engine under
-`jarvis/` is the hands; JEV (TypeSafe) is the reflex layer; local Whisper is the ears. Product root is `D:\JARVIS`.
+`jarvis/` is the hands; JEV (TypeSafe) is the reflex layer; Gnani Prisma/Timbre provide speech input/output. Product root is `D:\JARVIS`.
 
 ## Operating rules (when driving the computer through the `jarvis` MCP)
 
@@ -44,7 +44,7 @@ jarvis/history.py         daily conversation store (data/memory/conversations/hi
 jarvis/state             observation store: capture_id + fingerprint → stale-state protection
 jarvis/jev               TypeSafe /v1/systemone adapter (timeout/retry/cancel/metrics; degrades gracefully without a key)
 jarvis/safety            policy (safe/confirm/blocked) + confirmation dialog + secret redaction + privacy controls
-jarvis/voice             mic (push-to-talk, VAD, suppression) → faster-whisper (models/); tts (SAPI, modes); endpoint.py
+jarvis/voice             mic (push-to-talk, VAD, suppression) → Gnani Prisma; Gnani Timbre TTS/playback; endpoint.py
                          (adaptive end-of-turn), bargein.py (voice interrupt), ack.py (instant "On it."), StreamingSpeaker
 jarvis/app               tray + Claude session (claude-agent-sdk over the user's Claude Code login) + optional log console
 jarvis/ui                desktop orb — composition-hosted WebView2 (comphost.py, true transparency) + thinking-orbs engine; state mirrors runtime

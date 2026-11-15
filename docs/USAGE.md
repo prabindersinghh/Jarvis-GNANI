@@ -10,7 +10,7 @@ searching, responding, speaking, done, error). See docs/ORB_UI.md.
 **Talk:** hold `Ctrl+Alt+J`, speak, release. Tap it once to toggle listening (auto-stops on silence).
 Emergency stop: `Ctrl+Alt+X` (interrupts Claude and any recording). You can also type in the console.
 
-**What happens:** mic → local Whisper (`models/whisper-base.en`) → Claude Code (your Claude Max login) → JARVIS MCP tools →
+**What happens:** mic → Gnani Prisma (`GNANI_API_KEY`) → Claude Code (your Claude Max login) → JARVIS MCP tools →
 Windows. Deterministic actions run directly; UI clicks go through UI Automation; ambiguous choices go to JEV; OCR and
 screenshots are fallbacks. Every step is verified; dangerous actions pop a confirmation dialog.
 
@@ -19,7 +19,7 @@ by a local guard (stops at ₹900, resets on the 1st; shown in the orb as `JEV �
 the non-JEV routing paths. It is only consulted for genuinely ambiguous UI targets (≈0.4 s, ~$0.00004 per decision); deterministic and uniquely-named actions never touch it. Without a key JARVIS
 still works — ambiguous targets fall back to a local tie-breaker, then to Claude vision.
 
-**Speech:** JARVIS speaks the final reply (local Windows voices). Modes — `silent` (text only), `concise` (one or two
+**Speech:** Gnani Timbre synthesizes JARVIS replies. Modes — `silent` (text only), `concise` (one or two
 spoken sentences, default), `conversational` (full reply) — from the console dropdown or the tray menu. While JARVIS
 speaks, the microphone is muted; pressing the push-to-talk key interrupts it and listens.
 
@@ -30,9 +30,11 @@ file there to forget; nothing in it is secret (values are redacted, credential f
 **Privacy:** `settings.json → "privacy"`: `screenshots` = `allow` | `confirm` (asks before sending pixels to Claude) |
 `never`; `redact_cloud` scrubs secrets/PII from everything sent to Claude; `mask_fields` hides password/PIN/OTP/card
 values; `blocked_titles` lists windows JARVIS will never observe or capture (password managers, InPrivate, …).
-Audio never leaves the machine.
+Microphone audio is sent to Gnani Prisma; assistant reply text is sent to Gnani Timbre.
 
-**Settings:** `D:\JARVIS\data\config\settings.json` — `hotkey`, `whisper_model` (`base.en` fast / `small` more accurate),
+**Gnani voice key:** put `GNANI_API_KEY=...` in `D:\JARVIS\data\config\.env`.
+
+**Settings:** `D:\JARVIS\data\config\settings.json` — `hotkey`, `prisma_model`, `prisma_language`, `timbre_model`, `timbre_voice`,
 `mic_device` (index from `python -c "from jarvis.voice.mic import list_input_devices as l; print(l())"`), `brand`,
 `claude_model`, `jev_min_confidence`, `act_max_steps`.
 

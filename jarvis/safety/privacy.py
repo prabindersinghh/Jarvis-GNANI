@@ -6,7 +6,7 @@ Settings (data/config/settings.json → "privacy"):
   mask_fields: true                               never expose the value of password/PIN/OTP/card fields in observations
   max_text_chars: 6000                            cap on text sent per tool result
   blocked_titles: ["Password Manager", ...]      windows whose content is never observed/captured (titles, substring match)
-Audio never leaves the machine (Whisper is local). Raw screenshots are kept in memory only; downscaled PNGs go to
+Voice audio is sent to Gnani Prisma for transcription and assistant text is sent to Gnani Timbre for synthesis. Raw screenshots are kept in memory only; downscaled PNGs go to
 Claude only when the screenshot policy allows.
 """
 from __future__ import annotations

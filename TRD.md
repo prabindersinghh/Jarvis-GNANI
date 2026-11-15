@@ -25,7 +25,7 @@ Use the fastest route:
                     Voice / Text
                            |
                            v
-                    Local Whisper
+                    Gnani Prisma
                            |
                            v
                   +----------------+
@@ -262,7 +262,7 @@ Support:
 
 # 11. Voice
 
-Use local Whisper.
+Use Gnani Prisma for speech recognition and Gnani Timbre for speech synthesis. Store the API key in `data/config/.env`.
 
 Required:
 - microphone capture;

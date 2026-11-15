@@ -26,11 +26,13 @@ BRAND = "JARVIS"  # working name; keep configurable (settings.json: "brand")
 DEFAULTS: dict = {
     "brand": BRAND,
     "hotkey": "<ctrl>+<alt>+j",          # push-to-talk (pynput syntax)
-    "whisper_model": "base.en",         # tiny.en/base.en/small.en/small (CPU int8); base.en ≈1 s per utterance here
-    "whisper_language": "en",
-    "whisper_compute": "int8",
+    "prisma_model": "prisma-v3.0",
+    "prisma_language": "indic-auto",
+    "timbre_model": "timbre-v2.5",
+    "timbre_voice": "Kaveri",
+    "timbre_language": "en-IN",
+    "gnani_timeout_s": 30.0,
     "mic_device": None,                  # sounddevice index or None = default
-    "vad_aggressiveness": 0.5,           # silero VAD threshold via faster-whisper
     "vad_energy_threshold": 0.012,       # RMS floor: above = speech (endpointer + recorder)
     "max_utterance_s": 30,
     # low-latency voice (Performance/UX 2026-09-22): adaptive end-of-turn, barge-in, streaming TTS, instant ack
@@ -59,8 +61,6 @@ DEFAULTS: dict = {
     "claude_permission_mode": "acceptEdits",
     "log_level": "INFO",
     "response_mode": "concise",          # silent | concise | conversational (spoken replies)
-    "tts_voice": "",                     # substring of a SAPI voice name, e.g. "Zira"; empty = default
-    "tts_rate": 1,                       # -10 .. 10
     "memory_enabled": True,              # inject relevant local memory into each prompt
     "batching": True,
     "learning_enabled": True,           # perpetual learning: bandit policy over the router hook (§RL)
@@ -116,3 +116,7 @@ SETTINGS = load_settings()
 
 def jev_api_key() -> str | None:
     return os.environ.get("TYPESAFE_API_KEY") or None
+
+
+def gnani_api_key() -> str | None:
+    return os.environ.get("GNANI_API_KEY") or None

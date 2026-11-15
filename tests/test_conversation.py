@@ -1,5 +1,5 @@
 """Hands-free conversation mode: Listen starts a conversation that re-arms the mic after every reply and ends only
-when the user asks. Uses fake recorder/whisper/TTS — no audio devices, no Claude."""
+when the user asks. Uses fake recorder/Prisma/TTS — no audio devices, no Claude."""
 from __future__ import annotations
 
 import threading
@@ -45,7 +45,7 @@ class FakeRecorder:
         pass
 
 
-class FakeWhisper:
+class FakePrisma:
     def transcribe(self, audio):
         return {"text": "hello jarvis", "voice_ms": 1, "audio_s": 1.0, "no_speech": 0.0}
 
@@ -80,7 +80,7 @@ class FakeTTS:
 
 def _app():
     app = JarvisApp()
-    app.recorder, app.whisper, app.tts = FakeRecorder(), FakeWhisper(), FakeTTS()
+    app.recorder, app.prisma, app.tts = FakeRecorder(), FakePrisma(), FakeTTS()
     app.tts.on_end = app._on_tts_end
     app.submitted: list[str] = []
     app.submit = lambda t: app.submitted.append(t)  # type: ignore[method-assign]

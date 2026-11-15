@@ -1,6 +1,6 @@
-"""Local text-to-speech (Windows SAPI via pywin32, no cloud) with barge-in and microphone suppression.
+"""Gnani Timbre text-to-speech with queued playback, barge-in and microphone suppression.
 
-- `speak(text)` queues speech on a worker thread (COM-initialized there); `stop()` purges immediately.
+- `speak(text)` queues synthesis and playback on a worker thread; `stop()` purges immediately.
 - `speaking` is a threading.Event the recorder/PTT consult: while JARVIS talks, mic frames are dropped and a PTT
   press first silences JARVIS, then listens (barge-in).
 - Text is cleaned for speech: markdown, code blocks, URLs, tool noise, "Insight" boxes removed; concise mode trims to
@@ -9,17 +9,19 @@ Response modes (settings "response_mode"): silent (no speech) | concise (short s
 """
 from __future__ import annotations
 
+import io
 import logging
 import queue
 import re
 import threading
 import time
+import wave
 
 from .. import config
 
 log = logging.getLogger("jarvis.voice.tts")
 MODES = ("silent", "concise", "conversational")
-SVSFDefault, SVSFlagsAsync, SVSFPurgeBeforeSpeak = 0, 1, 2
+TTS_ENDPOINT = "https://api.vachana.ai/api/v1/tts/inference"
 
 _MD_CODE = re.compile(r"```.*?```", re.S)
 _MD_INLINE = re.compile(r"`([^`]*)`")
@@ -151,7 +153,6 @@ class TTS:
         self._stop = threading.Event()
         self._purge = threading.Event()
         self._thread = threading.Thread(target=self._worker, name="tts", daemon=True)
-        self._voice = None
         self.available = False
         self.last_error = None
         self._thread.start()
@@ -199,6 +200,11 @@ class TTS:
         self._purge.set()
         with self._q.mutex:
             self._q.queue.clear()
+        try:
+            import sounddevice as sd
+            sd.stop()
+        except Exception:  # noqa: BLE001
+            pass
 
     def shutdown(self):
         self._stop.set()
@@ -207,19 +213,11 @@ class TTS:
     # ---------------------------------------------------------------- worker
     def _worker(self):
         try:
-            import pythoncom
-            import win32com.client
-            pythoncom.CoInitialize()
-            self._voice = win32com.client.Dispatch("SAPI.SpVoice")
-            rate = int(config.SETTINGS.get("tts_rate", 1))
-            self._voice.Rate = max(-10, min(10, rate))
-            wanted = str(config.SETTINGS.get("tts_voice", "")).lower()
-            if wanted:
-                voices = self._voice.GetVoices()
-                for i in range(voices.Count):
-                    if wanted in voices.Item(i).GetDescription().lower():
-                        self._voice.Voice = voices.Item(i)
-                        break
+            if not config.gnani_api_key():
+                raise RuntimeError("GNANI_API_KEY is not set in data/config/.env")
+            import httpx
+            import sounddevice
+            self._client = httpx.Client(timeout=float(config.SETTINGS.get("gnani_timeout_s", 30)))
             self.available = True
         except Exception as e:  # noqa: BLE001
             self.last_error = str(e)
@@ -239,11 +237,25 @@ class TTS:
                 except Exception:  # noqa: BLE001
                     pass
             try:
-                self._voice.Speak(text, SVSFlagsAsync | SVSFPurgeBeforeSpeak)
-                while not self._voice.WaitUntilDone(100):
-                    if self._purge.is_set() or self._stop.is_set():
-                        self._voice.Speak("", SVSFlagsAsync | SVSFPurgeBeforeSpeak)
-                        break
+                payload = {"text": text,
+                           "model": config.SETTINGS.get("timbre_model", "timbre-v2.5"),
+                           "voice": config.SETTINGS.get("timbre_voice", "Kaveri"),
+                           "language": config.SETTINGS.get("timbre_language", "en-IN"),
+                           "audio_config": {"encoding": "linear_pcm", "container": "wav", "num_channels": 1,
+                                            "sample_rate": 48000, "sample_width": 2}}
+                response = self._client.post(TTS_ENDPOINT, headers={"X-API-Key-ID": config.gnani_api_key()}, json=payload)
+                if response.is_error:
+                    raise RuntimeError(f"Gnani Timbre HTTP {response.status_code}: {response.text[:300]}")
+                if self._purge.is_set() or self._stop.is_set():
+                    continue
+                import numpy as np
+                import sounddevice as sd
+                with wave.open(io.BytesIO(response.content), "rb") as audio:
+                    rate, channels = audio.getframerate(), audio.getnchannels()
+                    samples = np.frombuffer(audio.readframes(audio.getnframes()), dtype="<i2")
+                if channels > 1:
+                    samples = samples.reshape(-1, channels)
+                sd.play(samples, rate, blocking=True)
             except Exception as e:  # noqa: BLE001
                 log.warning("TTS speak failed: %s", e)
             finally:

@@ -4,7 +4,7 @@ JARVIS MCP (hands). Orb visual state is driven ONLY by real runtime events (stat
 Threads:
   main      the orb's WebView2 loop (pywebview must own the main thread); the tkinter console runs on demand in its own thread
   asyncio   ClaudeSession (claude-agent-sdk subprocess, streaming)
-  voice     Recorder + Whisper (hotkey callbacks come from the pynput listener thread)
+  voice     Recorder + Gnani Prisma (hotkey callbacks come from the pynput listener thread)
   tray      pystray icon (run_detached)
 """
 from __future__ import annotations
@@ -66,7 +66,7 @@ class JarvisApp:
         self.tray = None
         self.console = None
         self.recorder = None
-        self.whisper = None
+        self.prisma = None
         self.tts = None
         self.speaker = None                 # StreamingSpeaker: clause-by-clause TTS + resume decision (§12)
         self._ack_spoken_this_turn = False  # a local ack ("On it.") was spoken before Claude replied (§9)
@@ -317,8 +317,8 @@ class JarvisApp:
                     "text": (f"₹{b['spend_inr']:.2f} / ₹{b['limit_inr']:.0f}" + (" · limit reached" if b["exhausted"] else "")) if jev.available else "no key",
                     "detail": f"month {b['month']} · {b['calls']} calls · enforced at ₹{b['enforced_inr']:.0f} · resets {b['resets']}"},
             "memory": {"ok": mem_dir.exists(), "text": "ready", "detail": str(mem_dir)},
-            "voice": {"ok": bool(self.whisper is not None and getattr(self.whisper, "_model", None) is not None),
-                      "text": (self.whisper.model_name if self.whisper else "loading"),
+            "voice": {"ok": bool(self.prisma is not None and self.prisma.available),
+                      "text": (self.prisma.model_name if self.prisma else "loading"),
                       "detail": f"tts={'on' if self.tts and self.tts.available else 'off'} · mode={config.SETTINGS.get('response_mode')}"},
             "computer": {"ok": True, "text": "uia · input", "detail": "MCP engine (spawned per Claude session)"},
             "ocr": {"ok": None, "text": "windows ocr", "detail": "probed on first use"},
@@ -568,12 +568,12 @@ class JarvisApp:
             log.warning("TTS init failed: %s", e)
         try:
             from ..voice.mic import Recorder
-            from ..voice.whisper import engine
+            from ..voice.prisma import engine
             self.recorder = Recorder(suppress=lambda: self.tts is not None and self.tts.speaking.is_set(),
                                      on_bargein=self._on_bargein)
-            self.whisper = engine()
-            self.say("system", f"Loading Whisper {self.whisper.model_name} …")
-            self.whisper.load()
+            self.prisma = engine()
+            self.say("system", f"Connecting Gnani Prisma {self.prisma.model_name} …")
+            self.prisma.load()
             try:
                 self.recorder.open()  # pre-warm the input stream (first open costs ~0.8 s)
             except Exception as e:  # noqa: BLE001
@@ -693,12 +693,12 @@ class JarvisApp:
             with self._voice_lock:
                 self._listening = False
             if len(audio) < 16000 * 0.3 or (hands_free and not self.recorder.spoke):
-                # hands-free: a whole window of silence is normal — skip Whisper and simply listen again
+                # hands-free: a whole window of silence is normal — skip transcription and simply listen again
                 if not hands_free:
                     self.set_status("idle")
                 return
             self.set_status("transcribing")
-            r = self.whisper.transcribe(audio)
+            r = self.prisma.transcribe(audio)
             self._log_metric("voice_ms", r["voice_ms"])
             text = r["text"].strip()
             self._uiq(("level", 0.0))

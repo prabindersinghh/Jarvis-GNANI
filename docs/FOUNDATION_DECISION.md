@@ -37,7 +37,7 @@ Optional: `third_party/windows-mcp/WindowsMcp.exe` (prebuilt, MIT) registered as
 - `jarvis/orchestrator/` — router (deterministic → UIA unique → JEV → OCR → vision → human), verifiers, bounded waits, `act` micro-loop.
 - `jarvis/jev/` — isolated JEV adapter (httpx, timeout/retry/cancel/metrics, operation+target heads, no-key fallback).
 - `jarvis/safety/` — policy classification (safe / confirm / blocked), secret redaction, human confirm.
-- `jarvis/voice/` — sounddevice mic → VAD → faster-whisper (CTranslate2, CPU int8) → transcript; push-to-talk hotkey.
+- `jarvis/voice/` — sounddevice mic → VAD → Gnani Prisma transcript; Gnani Timbre speech output; push-to-talk hotkey.
 - `jarvis/app/` — tray + console window (tkinter), Claude Code session via `claude-agent-sdk` (uses the user's Claude Max login; no other LLM).
 - `launcher/`, `dist/JARVIS.exe`, desktop `JARVIS.lnk`; `benchmarks/`, `tests/`.
 

@@ -9,7 +9,7 @@ Claude is the brain. Your desktop is the hands. Every action is verified.
 [![Python](https://img.shields.io/badge/Python-3.12-3776AB?logo=python&logoColor=white)](requirements.txt)
 [![Brain](https://img.shields.io/badge/brain-Claude%20Code-D97757)](https://claude.com/claude-code)
 [![MCP](https://img.shields.io/badge/MCP-18%20tools-6E40C9)](#the-18-tool-mcp-surface)
-[![Voice](https://img.shields.io/badge/speech-local%20Whisper-111111)](#privacy)
+[![Voice](https://img.shields.io/badge/speech-Gnani%20Prisma%20%2B%20Timbre-111111)](#privacy)
 [![Install](https://img.shields.io/badge/install-2%20commands-2EA043)](#install)
 
 [Install](#install) · [How it works](#how-it-works) · [Tech stack](#tech-stack) · [Under the hood](#under-the-hood) · [Using JARVIS](#using-jarvis) · [Performance](#performance) · [Safety](#safety) · [Troubleshooting](#troubleshooting) · [FAQ](#faq)
@@ -28,7 +28,7 @@ Hold a hotkey and say what you want:
 
 > *"Open Chrome, find the latest Qwen paper, download it to my research folder, rename it properly, and summarize it."*
 
-JARVIS transcribes you **on your machine**, lets Claude plan the task, and then carries it out on the real Windows
+JARVIS transcribes speech with Gnani Prisma, lets Claude plan the task, and then carries it out on the real Windows
 desktop. That means apps, windows, browser, files, terminal, keyboard and mouse. It checks that the download exists and
 the rename happened, then tells you in a sentence. Anything destructive waits for your click.
 
@@ -38,7 +38,7 @@ the rename happened, then tells you in a sentence. Anything destructive waits fo
 
 | | |
 |---|---|
-| 🎙️ **Voice-first** | Local Whisper speech-to-text, adaptive end-of-turn detection, an instant "On it.", and you can interrupt mid-reply. |
+| 🎙️ **Voice-first** | Gnani Prisma speech-to-text, adaptive end-of-turn detection, Timbre speech output, and interruptible replies. |
 | 🧠 **Claude as the brain** | Runs on your own Claude Code login through the official Agent SDK. Claude plans and reasons; it never micromanages clicks. |
 | ⚡ **Cheapest path first** | Shortcuts and UI Automation before any model. A control is found in ~3 ms. Screenshots are the last resort, not the loop. |
 | ✅ **Verified, not assumed** | Every tool reports whether the outcome actually happened. Stale screens are rejected and re-observed. |
@@ -69,7 +69,7 @@ Setup takes a fresh Windows 11 machine to a running JARVIS. Each step is skipped
 | 2 | **Claude Code CLI** via the official installer, if missing |
 | 3 | **WebView2 runtime** for the orb, if missing |
 | 4 | Virtual environment and every pinned Python dependency |
-| 5 | **Whisper** speech model, downloaded locally |
+| 5 | Gnani API key in `data/config/.env` for Prisma and Timbre |
 | 6 | **MCP servers** for this folder: `jarvis` (18 tools) and `windows-mcp` (63 admin tools) |
 | 7 | Claude Code workspace trust, so both servers load without prompts |
 | 8 | Orb UI, data folders and the secrets template |
@@ -98,8 +98,8 @@ D:\JARVIS\setup.cmd -BuildExe        # also build dist\JARVIS.exe
 |---|---|
 | **OS** | Windows 11 (tested). Windows 10 2004+ is allowed by setup but untested. |
 | **Account** | A Claude account that can use Claude Code (Pro or Max) |
-| **Disk** | About 1 GB (dependencies and the Whisper model) |
-| **Hardware** | Any modern CPU. No GPU needed; Whisper runs int8 on the CPU |
+| **Disk** | Application dependencies; no local speech model download |
+| **Hardware** | Microphone and audio output; internet access for Gnani speech APIs |
 | **Optional** | A TypeSafe key for the JEV reflex layer (see [Configuration](#configuration)) |
 
 ## How it works
@@ -122,7 +122,7 @@ JARVIS sends every action down a ladder and stops at the first rung that works:
 
 ```mermaid
 flowchart TD
-    U(["You speak"]) --> V["Voice, all local<br/>VAD · Whisper · adaptive end-of-turn · barge-in"]
+    U(["You speak"]) --> V["Voice<br/>VAD · Gnani Prisma · adaptive end-of-turn · barge-in"]
     V --> B["Brain: Claude Code<br/>plans · reasons · codes"]
     B -- "MCP over stdio" --> M["JARVIS MCP server<br/>18 tools · router · verification · stale-state guard"]
     M --> T1["Deterministic"]
@@ -142,7 +142,7 @@ flowchart TD
 | **Hands** | DPI-aware capture, SendInput, UI Automation, OCR, multi-monitor | `jarvis/computer` |
 | **Router** | Tier selection, verification, waits, batched runs, the local act loop | `jarvis/orchestrator` |
 | **Reflexes** | JEV (TypeSafe) structured decisions behind a hard monthly cap | `jarvis/jev` |
-| **Ears & voice** | Microphone, VAD, Whisper, endpointing, barge-in, text-to-speech | `jarvis/voice` |
+| **Ears & voice** | Microphone, VAD, Prisma, endpointing, barge-in, Timbre text-to-speech | `jarvis/voice` |
 | **Safety** | Safe / confirm / blocked policy, confirmation dialog, secret redaction | `jarvis/safety` |
 | **Learning** | Contextual-bandit policy over router decisions, with promote and rollback | `jarvis/learning` |
 | **Memory** | Experience memory, daily conversations, private knowledge graph | `jarvis/memory` `jarvis/graph` |
@@ -170,10 +170,10 @@ The same server works in any Claude Code session opened in this folder, not just
 |---|---|---|---|
 | **Reasoning** | Claude Code CLI + [`claude-agent-sdk`](https://github.com/anthropics/claude-agent-sdk-python) | 0.2.157 | Uses your own Claude Code login, streams partial messages, and hosts MCP servers in-process config |
 | **Tool protocol** | [Model Context Protocol](https://modelcontextprotocol.io) Python SDK (`mcp`), stdio transport | 2.2.0 | A standard, compact tool surface any Claude Code session can attach to |
-| **Speech-to-text** | [`faster-whisper`](https://github.com/SYSTRAN/faster-whisper) on CTranslate2, int8 on CPU | 1.2.1 · 4.8.2 | About 1 s per utterance on a laptop CPU, with no GPU and no cloud |
+| **Speech-to-text** | Gnani Prisma v3 REST API | Prisma v3.0 · `api.vachana.ai` | Indic multilingual recognition with automatic language detection |
 | **Voice activity** | Silero VAD on ONNX Runtime + RMS energy gate | 1.30.0 | Cheap speech/silence decisions feeding the adaptive endpointer |
 | **Audio I/O** | `sounddevice` (PortAudio), resampled to 16 kHz mono | 0.5.6 | Device-rate capture with any microphone |
-| **Text-to-speech** | Windows SAPI (`SAPI.SpVoice`) via `pywin32` | 312 | Local voices, no network, interruptible mid-sentence |
+| **Text-to-speech** | Gnani Timbre REST API with queued local playback | Timbre v2.5 · `api.vachana.ai` | Requires network and Gnani API key; replies are synthesized clause by clause |
 | **UI Automation** | `uiautomation` (Microsoft UIA COM) | 2.0.29 | Structured element tree: roles, names, automation ids, patterns |
 | **Input** | Win32 `SendInput` via `ctypes` (scan codes + Unicode) | n/a | Works in apps and games that ignore virtual-key events |
 | **Capture** | `mss` (GDI BitBlt) + `PrintWindow(PW_RENDERFULLCONTENT)` | 10.2.0 | Fast desktop capture, and correct pixels even for GPU-composited windows |
@@ -201,12 +201,12 @@ A deeper look at how each subsystem works. File references point at the implemen
 ```mermaid
 sequenceDiagram
     participant U as You
-    participant V as Voice (local)
+    participant V as Voice
     participant C as Claude Code
     participant M as JARVIS MCP
     participant W as Windows
     U->>V: hold Ctrl+Alt+J and speak
-    V->>V: VAD, adaptive endpoint, Whisper
+    V->>V: VAD, adaptive endpoint, Gnani Prisma
     V-->>U: "On it." (~90 ms, local)
     V->>C: transcript + memory block
     C->>M: computer_run([...steps, expect])
@@ -286,10 +286,10 @@ measured improvement and rolled back on regression, with atomic, versioned persi
 - **Adaptive endpointing** (`endpoint.py`) is a small state machine (`IDLE → SPEAKING → POSSIBLE_END → FINALIZED`).
   The trailing silence it needs depends on what was just said: **0.55 s** for a short, fluent command, **0.8 s** by
   default, and up to **1.3 s** once you've hesitated. Quick commands finalize fast, and nobody gets cut off mid-thought.
-- **Transcription** with `faster-whisper` `base.en`, int8 on the CPU. The model is stored in `models/`.
+- **Transcription** with Gnani Prisma v3.0 over REST (`GNANI_API_KEY` in `data/config/.env`).
 - **Instant acknowledgement** (`ack.py`). For task-like requests, a local "On it." plays in about 90 ms, long before
   Claude's first token.
-- **Streaming speech.** Claude's reply is cut into complete clauses as it streams and spoken right away through SAPI.
+- **Streaming speech.** Claude's reply is cut into complete clauses as it streams and each clause is synthesized by Gnani Timbre.
 - **Barge-in** (`bargein.py`). Microphone frames are analysed even while JARVIS talks. Sustained speech above a raised
   threshold (0.035 RMS for at least 220 ms) interrupts the reply, so a cough, a click or JARVIS's own echo doesn't.
 
@@ -367,7 +367,11 @@ All settings are in `data\config\settings.json`. Secrets go in `data\config\.env
 | Setting | Default | Purpose |
 |---|---|---|
 | `hotkey` | `<ctrl>+<alt>+j` | Push-to-talk key |
-| `whisper_model` | `base.en` | `tiny.en` is fastest; `small` is more accurate |
+| `prisma_model` | `prisma-v3.0` | Gnani Prisma speech recognition model |
+| `prisma_language` | `indic-auto` | Automatic language detection for Prisma v3 |
+| `timbre_model` | `timbre-v2.5` | Gnani Timbre speech synthesis model |
+| `timbre_voice` | `Kaveri` | Voice name from the selected Timbre model |
+| `timbre_language` | `en-IN` | Synthesis language |
 | `mic_device` | system default | Input device index |
 | `response_mode` | `concise` | `silent` · `concise` · `conversational` |
 | `claude_model` | your default | Pin a specific Claude model |
@@ -411,7 +415,7 @@ Design wins that hold regardless of machine load ([details](benchmarks/latency/c
 
 ### Privacy
 
-Your **audio never leaves the machine**. Speech is transcribed locally. Conversations, memory and the knowledge graph are
+Microphone audio is sent to Gnani Prisma for transcription, and assistant reply text is sent to Gnani Timbre for synthesis. Conversations, memory and the knowledge graph are
 stored only under `data\`. Claude sees the text of your request and the tool results it needs. Screenshots go to Claude
 only when lower tiers fail, and you can set them to `confirm` or `never`.
 
@@ -430,7 +434,7 @@ only when lower tiers fail, and you can set them to `confirm` or `never`.
 
 **Does it cost extra?** No separate model bill: JARVIS runs on your existing Claude Code login. JEV is optional and capped.
 
-**Does it work offline?** Speech recognition and the computer engine are local. Planning needs Claude, so it needs internet.
+**Does it work offline?** Computer control runs locally, but voice uses Gnani APIs and planning uses Claude, so those features need internet.
 
 **Can it run on macOS or Linux?** No. The engine is built on Windows UI Automation and Win32 input.
 
@@ -460,7 +464,7 @@ jarvis/
   computer/             MCP server + Windows engine (capture, input, UIA, OCR, DPI)
   orchestrator/         router, verification, waits, act loop, batching, metrics
   jev/                  TypeSafe adapter + monthly budget
-  voice/                mic, Whisper, endpointing, barge-in, acknowledgement, TTS
+  voice/                mic, Prisma, endpointing, barge-in, acknowledgement, Timbre TTS
   safety/               policy, confirmation, privacy redaction
   learning/             bandit policy, rewards, experience
   memory/ · graph/      experience memory, private knowledge graph
@@ -498,7 +502,7 @@ and never route around the safety policy.
 JARVIS stands on excellent open-source work, credited in full in [`THIRD_PARTY_NOTICES.md`](THIRD_PARTY_NOTICES.md):
 the Windows engine from [sshh12/windows-computer-use-mcp](https://github.com/sshh12/windows-computer-use-mcp) (MIT),
 [Windows-MCP](https://github.com/danielsimonjr/Windows-MCP) (MIT), the thinking-orbs visual engine,
-[faster-whisper](https://github.com/SYSTRAN/faster-whisper), [pywebview](https://github.com/r0x0r/pywebview),
+[Gnani speech APIs](https://docs.gnani.ai/api/introduction/introduction), [pywebview](https://github.com/r0x0r/pywebview),
 graphifyy, and Anthropic's [Claude Agent SDK](https://github.com/anthropics/claude-agent-sdk-python).
 
 ---
