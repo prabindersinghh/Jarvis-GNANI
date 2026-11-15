@@ -1,6 +1,8 @@
 # JARVIS latency — after
 
-Generated 2026-09-22 04:53 · whisper=base.en (int8).
+Historical pre-Gnani local speech baseline; the voice measurements do not describe Prisma or Timbre.
+
+Generated 2026-09-22 04:53 · legacy_local_stt=former_local_recognizer (legacy_local_quantization).
 
 Offline-measurable legs only (no mouse / no audio / no app launch). The live end-to-end wall-clock chain and live barge-in timing are measured separately when the user is away — see the report.
 
@@ -18,9 +20,9 @@ Offline-measurable legs only (no mouse / no audio / no app launch). The live end
 |---|---|---|---|---|---|---|
 | context_redact | 50 | 0.1 | 0.1 | 0.1 | 0.1 | 0.1 |
 | context_memory_brief | 20 | 2.7 | 5.6 | 15.9 | 1.4 | 43.3 |
-| whisper_base.en_load | 1 | 5547 | — | — | — | — |
-| whisper_base.en_long_3.9s | 5 | 3446.7 | 3757.3 | 4059.3 | 3240.2 | 4134.8 |
-| whisper_base.en_short_1.6s | 5 | 3061.7 | 3140.9 | 3430.3 | 2753.2 | 3502.7 |
+| legacy_local_stt_former_local_recognizer_load | 1 | 5547 | — | — | — | — |
+| legacy_local_stt_former_local_recognizer_long_3.9s | 5 | 3446.7 | 3757.3 | 4059.3 | 3240.2 | 4134.8 |
+| legacy_local_stt_former_local_recognizer_short_1.6s | 5 | 3061.7 | 3140.9 | 3430.3 | 2753.2 | 3502.7 |
 | tts_cold_first_synth | 1 | 476 | — | — | — | — |
 | tts_synth_clause | 5 | 219.4 | 241.7 | 246.4 | 137.2 | 247.6 |
 | tts_synth_full_reply | 5 | 263.9 | 280.1 | 296.4 | 205.1 | 300.5 |

@@ -33,7 +33,7 @@ Claude = Brain
 JEV = Reflexes
 MCP = Tool/Nervous System
 Windows APIs + UIA = Hands
-Whisper = Ears
+Gnani Prisma = Ears
 Screen/OCR = Eyes
 JARVIS = Whole system
 ```
@@ -279,7 +279,7 @@ Phases can exist internally for dependency ordering, but Claude should not stop 
                   "JARVIS..."
                       |
                       v
-              LOCAL WHISPER
+              GNANI PRISMA
                       |
                       v
                  CLAUDE CODE

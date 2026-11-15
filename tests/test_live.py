@@ -181,7 +181,9 @@ def test_mcp_stdio_roundtrip():
 
 def test_voice_pipeline_real_audio():
     from jarvis.voice.mic import load_wav
-    from jarvis.voice.whisper import engine
+    from jarvis.voice.prisma import engine
+    if not engine().available:
+        pytest.skip("GNANI_API_KEY is not configured")
     wav = ROOT / "tests" / "fixtures" / "open_notepad.wav"
     if not wav.exists():
         pytest.skip("fixture missing")

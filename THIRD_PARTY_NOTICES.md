@@ -28,13 +28,12 @@
 - awlevin/typesafe-computer-use (MIT) — kind/item multi-question decisions, confidence gating.
 
 ## Python dependencies (pip, see `requirements.txt`)
-mcp (MIT), mss (MIT), Pillow (MIT-CMU), uiautomation (Apache-2.0), httpx (BSD-3), faster-whisper (MIT),
-CTranslate2 (MIT), sounddevice (MIT), pystray (LGPL-3.0, used as an unmodified library), pynput (LGPL-3.0, unmodified
+mcp (MIT), mss (MIT), Pillow (MIT-CMU), uiautomation (Apache-2.0), httpx (BSD-3), sounddevice (MIT), pystray (LGPL-3.0, used as an unmodified library), pynput (LGPL-3.0, unmodified
 library), psutil (BSD-3), pywin32 (PSF), claude-agent-sdk (MIT), numpy (BSD-3), pyinstaller (GPL-2.0 with bootloader
 exception — build tool only; the produced JARVIS.exe is not GPL-encumbered).
 
-## Models
-- Whisper `base.en` / `small` via faster-whisper (Systran CTranslate2 conversions), MIT; weights under `models/`.
+## Hosted speech services
+Gnani Prisma (speech recognition) and Gnani Timbre (speech synthesis) are called through Gnani's hosted APIs.
 
 
 ## pythonnet + WebView2 composition host (orb UI redesign, 2026-09-21)

@@ -1,18 +1,18 @@
 # JARVIS
 
 Personal Windows computer agent. **Claude Code is the brain** (your Claude Max login), **JEV is the reflex layer**,
-**local Whisper is the ears**, and a vendored Windows engine (UIA, SendInput, DPI-aware multi-monitor capture, OCR)
+Gnani Prisma provides speech recognition and Gnani Timbre provides speech synthesis. A vendored Windows engine (UIA, SendInput, DPI-aware multi-monitor capture, OCR)
 is the hands. Lives entirely under `D:\JARVIS`.
 
 ```
-click Desktop\JARVIS → hold Ctrl+Alt+J and speak → Whisper transcribes locally → Claude plans →
+click Desktop\JARVIS → hold Ctrl+Alt+J and speak → Gnani Prisma transcribes → Claude plans →
 JARVIS MCP executes (deterministic → UIA → JEV → OCR → vision → human) → every step verified
 ```
 
 - **Start:** `Desktop\JARVIS.lnk` (→ signed `.venv\Scripts\pythonw.exe -m jarvis.app`). A desktop **orb** appears bottom-right;
   click it to talk/type. No VS Code, no terminal. UI details: [docs/ORB_UI.md](docs/ORB_UI.md).
 - **Feels immediate:** adaptive end-of-turn, streaming clause-by-clause speech, an instant local "On it." for longer
-  tasks, and voice barge-in — all local. Details: [docs/PERFORMANCE_UX_2026-09-22.md](docs/PERFORMANCE_UX_2026-09-22.md).
+  tasks, and voice barge-in. Voice audio uses Gnani Prisma/Timbre APIs. Details: [docs/PERFORMANCE_UX_2026-09-22.md](docs/PERFORMANCE_UX_2026-09-22.md).
 - **Recall:** a local private memory graph of JARVIS's own experience + a graphify codebase graph —
   [docs/GRAPH.md](docs/GRAPH.md). How it all came to be: [docs/PROJECT_HISTORY.md](docs/PROJECT_HISTORY.md).
 - **Docs:** [docs/USAGE.md](docs/USAGE.md) · [docs/FOUNDATION_DECISION.md](docs/FOUNDATION_DECISION.md) ·
@@ -31,5 +31,5 @@ back on a new machine:
 git clone <this-private-repo> D:\JARVIS
 cd D:\JARVIS
 copy .env.example data\config\.env      # then paste your TYPESAFE_API_KEY
-powershell -ExecutionPolicy Bypass -File launcher\install.ps1   # rebuilds venv, Whisper model, exe, shortcut
+powershell -ExecutionPolicy Bypass -File launcher\install.ps1   # rebuilds venv, exe, shortcut
 ```

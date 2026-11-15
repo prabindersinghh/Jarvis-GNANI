@@ -1,24 +1,29 @@
-# JARVIS — acceptance record (2026-09-21)
+# JARVIS — historical acceptance record (2026-09-21, before Gnani voice migration)
 
-Evidence gathered on the build machine (Windows 11 26200, Intel Core Ultra 7, 1920×1200 @150 % DPI, Smart App Control ON).
+Evidence below predates the Gnani Prisma/Timbre migration and does not validate the current speech providers. Current Gnani
+voice verification is tracked separately. Evidence gathered on Windows 11 26200, Intel Core Ultra 7, 1920×1200 @150 % DPI.
 Numbers: `benchmarks/results.md`. Test suites: `tests/test_unit.py` (24 pass), `tests/test_live.py` (12 pass, real desktop).
 
 ## Launch
 - [x] `D:\JARVIS` contains the product (single `jarvis/` package + launcher/tests/benchmarks/docs/models/data/logs/dist/third_party).
 - [x] `%USERPROFILE%\Desktop\JARVIS.lnk` exists → `D:\JARVIS\dist\JARVIS.exe`, cwd `D:\JARVIS`, icon `launcher\jarvis.ico`.
 - [x] Icon: generated ring icon embedded in the exe and set on the shortcut; visible in the tray overflow ("JARVIS — idle").
-- [x] Clicking it starts JARVIS: `Start-Process JARVIS.lnk` → console window + tray + Claude connected + Whisper loaded
+- [x] Clicking it starts JARVIS: `Start-Process JARVIS.lnk` → console window + tray + Claude connected + voice adapter initialized
       (`logs/jarvis.log`). Process ancestry: `pythonw.exe` detached, no `Code.exe`/terminal parent.
 - [x] VS Code not required: launcher = PyInstaller exe → venv `pythonw.exe`; Claude CLI = native `~/.local/bin/claude.exe`
       (copy in `dist/claude/`). *Not exercised with VS Code fully closed because this build session runs inside it — see "Left for the user".*
 
 ## Voice
-- [x] Local Whisper works: `base.en` int8 on CPU, 3.9 s utterance → 0.8–1.2 s; transcript of synthesized speech exact
-      ("Jarvis, open Notepad and type hello world"). `small` available via settings (≈3 s, same accuracy on the fixture).
+- [x] Former local speech recognition worked on the original fixture. This historical result does not establish Prisma
+      accuracy or API connectivity.
 - [x] Microphone works: `Microphone Array on SoundWire Device` opens at 44.1 kHz → 16 kHz; live capture returned samples.
-- [x] Transcript reaches the agent: PTT hotkey (Ctrl+Alt+J) in the running app → recorder → Whisper → Claude → Notepad
+- [x] Historical local-recognition transcript reached the agent: PTT hotkey → recorder → transcription → Claude → Notepad
       opened with "Hello World" typed and read back via UIA. (Audio injected via `JARVIS_TEST_AUDIO` because the laptop's
       mic array applies echo cancellation, which strips speaker playback; the physical mic path was verified separately.)
+
+### Gnani voice provider verification
+- [ ] Prisma live transcription and Timbre live synthesis/playback verified with `GNANI_API_KEY` configured.
+- Live checks are implemented in `tests/test_live.py` and `tests/test_live_voice.py`; no passing run is recorded yet.
 
 ## Claude
 - [x] Claude Code uses the JARVIS MCP (16 `computer_*` tools) over stdio from `.mcp.json` and from the app (agent SDK).
@@ -68,7 +73,7 @@ Numbers: `benchmarks/results.md`. Test suites: `tests/test_unit.py` (24 pass), `
 
 ## Performance (medians, this machine)
 - native key/mouse 0–53 ms · UIA observe 101 ms · routed UIA click ≈400 ms incl. verification · type 20 chars 212 ms
-  verified · OCR 474 ms · screenshot 33 ms · MCP round-trip 2 ms (status) / 102 ms (observe) · Whisper 1.2 s / 3.9 s audio
+  verified · OCR 474 ms · screenshot 33 ms · MCP round-trip 2 ms (status) / 102 ms (observe) · former local STT 1.2 s / 3.9 s audio (historical)
   · Claude connect 12 s (once per app start) · Claude turn 4–6 s · launch→observe→type→verify chain 2.2 s.
 - Optimizations applied from measurement: paste-first typing (garbled SendInput in WinUI), physical click instead of
   synchronous Invoke for visible controls (1019 → 400 ms), skip second UIA walk for observations < 400 ms old.
@@ -129,7 +134,7 @@ Numbers: `benchmarks/results.md`. Test suites: `tests/test_unit.py` (24 pass), `
 - [x] Voice barge-in (`jarvis/voice/bargein.py`): monitors during TTS instead of dropping frames; stops speech + cancels the obsolete reply/generation; ignores coughs/quiet echo (tested).
 - [x] JEV connection pre-warm (token-free, budget untouched). Router/verification/safety/privacy/RL unchanged. 88 non-live tests green (was 81 + 7 latency).
 - [x] **Live run (user away, 2026-09-22):** packaged app booted clean with all new code — log shows `JEV connection pre-warmed`
-      (token-free GET→404), learning worker, Whisper (3.4 s), mic, Claude connected, TTS spoke. Live desktop suite
+      (token-free GET→404), learning worker, former local STT (3.4 s), mic, Claude connected, speech output. Live desktop suite
       `test_live.py` 16/16 (2 Notepad tests flake only when racing consecutive runs; pass in isolation). Live orb 6/7
       (the 1 fail is HUD pixel-brightness sampling, wallpaper-sensitive, unrelated to this work). New real-audio suite
       `tests/test_live_voice.py` **4/4**: adaptive endpointer on the real recorded utterance; real streaming-TTS
@@ -146,5 +151,5 @@ Numbers: `benchmarks/results.md`. Test suites: `tests/test_unit.py` (24 pass), `
 ## Left for the user
 1. **Close VS Code and double-click the desktop icon** to confirm independence on your side (structurally verified here).
 2. If Windows hides the tray icon, drag it out of the overflow (Settings → Personalization → Taskbar → Other system tray icons).
-3. Pick a voice: `settings.json → "tts_voice": "Zira"` (or "David"); `tts_rate` −10..10.
+3. Pick the speech voice: `settings.json → "timbre_voice"` and its matching `"timbre_language"`.
 4. Multi-monitor: only one display was attached here; the orb follows the primary work area by design — tell me if it misplaces on your setup.

@@ -1,5 +1,7 @@
 # JARVIS benchmark — 2026-09-21 07:10
 
+Historical pre-Gnani local speech baseline. Speech figures here do not measure Prisma or Timbre.
+
 Machine: Intel64 Family 6 Model 204 Stepping 3, GenuineIntel · Windows-11-10.0.26200-SP0 · Python 3.12.10 · DPI per-monitor-v2
 
 | metric | n | median ms | min | max |
@@ -21,8 +23,8 @@ Machine: Intel64 Family 6 Model 204 Stepping 3, GenuineIntel · Windows-11-10.0.
 | mcp_server_startup_ms | 1 | **588** | 588 | 588 |
 | mcp_roundtrip_status_ms | 8 | **2** | 1 | 135 |
 | mcp_roundtrip_observe_ms | 8 | **102** | 100 | 160 |
-| whisper_load_ms | 1 | **4245** | 4245 | 4245 |
-| whisper_base.en_3.9s_audio_ms | 3 | **1244** | 1190 | 1675 |
+| legacy_local_stt_load_ms | 1 | **4245** | 4245 | 4245 |
+| legacy_local_stt_former_local_recognizer_3.9s_audio_ms | 3 | **1244** | 1190 | 1675 |
 | claude_connect_ms | 1 | **11960** | 11960 | 11960 |
 | claude_turn_text_only_ms | 1 | **4121** (first token 3280 ms) | 4121 | 4121 |
 | claude_turn_one_tool_ms | 1 | **5849** (first token 5819 ms) | 5849 | 5849 |

@@ -77,7 +77,7 @@ Do not use JEV for general reasoning.
 ### Local AI
 
 Use local AI only where specialized/local processing makes sense, especially:
-- Whisper speech recognition;
+- Gnani Prisma speech recognition and Timbre speech synthesis;
 - VAD;
 - OCR;
 - deterministic/specialized vision utilities.
@@ -124,12 +124,12 @@ Never make Claude micromanage obvious mouse movements.
 
 ## 4. Voice
 
-Voice is local-first:
+Voice uses Gnani's hosted speech APIs:
 
 ```text
 Microphone
 → VAD
-→ local Whisper
+→ Gnani Prisma
 → transcript
 → Claude Code
 ```
@@ -333,7 +333,7 @@ The product is complete when the user can:
 1. click JARVIS on the desktop;
 2. JARVIS starts independently;
 3. speak a command;
-4. Whisper transcribes locally;
+4. Gnani Prisma transcribes the audio;
 5. Claude understands the goal;
 6. JARVIS operates Windows;
 7. deterministic actions bypass models;

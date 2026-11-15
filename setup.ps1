@@ -6,7 +6,7 @@
 
   Installs everything JARVIS needs, from a bare Windows 11 machine, with no manual steps:
     Python 3.12 · Claude Code CLI · WebView2 runtime · virtual environment · every pip dependency ·
-    the Whisper speech model · the JARVIS MCP server + Windows-MCP · Claude Code workspace trust ·
+    Gnani Prisma/Timbre voice configuration · the JARVIS MCP server + Windows-MCP · Claude Code workspace trust ·
     the orb UI · the desktop shortcut. Then it self-tests and launches JARVIS.
 
   Works from any folder (not only D:\JARVIS). Safe to re-run: every step is idempotent.
@@ -121,19 +121,18 @@ $env:PIP_DISABLE_PIP_VERSION_CHECK = "1"
 if ($LASTEXITCODE) { Fail "pip install failed. Re-run setup; check your internet connection." }
 Ok "all packages installed"
 
-# ── 7. Whisper model ─────────────────────────────────────────────────────────
-Step "Whisper speech model (local)"
-$env:HF_HOME = Join-Path $Root "models\hf"
+# ── 7. Gnani speech configuration ────────────────────────────────────────────
+Step "Gnani Prisma and Timbre speech APIs"
 $env:JARVIS_ROOT = $Root
 $env:PYTHONUTF8 = "1"
-& $py -c "from jarvis.voice.whisper import engine; print('   OK ', engine().ensure_downloaded())"
-if ($LASTEXITCODE) { Fail "Whisper model download failed. Re-run setup." }
+& $py -c "from jarvis.voice.prisma import engine; print('   OK ', engine().model_name)"
+if ($LASTEXITCODE) { Fail "Gnani voice adapter check failed." }
 
 # ── 8. Data folders, secrets template, orb UI ────────────────────────────────
 Step "Data folders, settings and orb UI"
 foreach ($d in "data\config", "data\memory", "logs", "models") { New-Item -ItemType Directory -Force -Path (Join-Path $Root $d) | Out-Null }
 $envFile = Join-Path $Root "data\config\.env"
-if (-not (Test-Path $envFile)) { Copy-Item (Join-Path $Root ".env.example") $envFile; Info "created data\config\.env (add TYPESAFE_API_KEY later — optional)" }
+if (-not (Test-Path $envFile)) { Copy-Item (Join-Path $Root ".env.example") $envFile; Info "created data\config\.env (add GNANI_API_KEY for voice; TYPESAFE_API_KEY is optional)" }
 & $py -m jarvis.app.icon (Join-Path $Root "launcher\jarvis.ico") | Out-Null
 & $py -m jarvis.ui.build | Out-Null
 if ($LASTEXITCODE) { Fail "orb UI build failed (third_party\thinking-orbs missing?). Re-clone the repo and re-run setup." }
@@ -189,7 +188,7 @@ if ($BuildExe) {
 
 # ── 11. Self-test ────────────────────────────────────────────────────────────
 Step "Self-test"
-& $py -c "import jarvis.computer.server, jarvis.app.claude_session, jarvis.voice.whisper, jarvis.ui.comphost; print('   OK  all modules import')"
+& $py -c "import jarvis.computer.server, jarvis.app.claude_session, jarvis.voice.prisma, jarvis.ui.comphost; print('   OK  all modules import')"
 if ($LASTEXITCODE) { Fail "self-test failed — see the error above." }
 & $py -m pytest (Join-Path $Root "tests\test_unit.py") -q -p no:cacheprovider 2>&1 | Select-Object -Last 1 | ForEach-Object { Info "unit tests: $_" }
 

@@ -5,7 +5,7 @@ no audio played, no app launched) so they were safe to run while the machine was
 
 ## Honesty note on the raw hardware legs
 The absolute per-leg times below are **noisy**, and the noise is not the optimization. The measurements were taken while
-the user was actively working on the laptop, so Whisper/OCR times swing with CPU contention (Whisper 3.9 s audio measured
+the user was actively working on the laptop, so historical local STT/OCR times swing with CPU contention (local STT 3.9 s audio measured
 at 718 ms on an idle pass and 3446–3630 ms under load) and UIA-observe swings with **which window happens to be in the
 foreground** (68 ms for a light window, 1722 ms for a heavy one). These legs run the **same code** before and after — they
 were never the target — so no before/after delta is claimed for them. The wins are architectural and were measured with
@@ -53,6 +53,6 @@ tests). End-to-end interrupt latency needs a live audible session (it plays audi
 left for a session when the user is away.
 
 ## What did NOT change (by design)
-Whisper model/accuracy, OCR, the router tiers, verification, safety, privacy, the JEV budget ceiling, memory, daily
+the speech model/accuracy, OCR, the router tiers, verification, safety, privacy, the JEV budget ceiling, memory, daily
 conversation, and the RL hook are all unchanged. Optimization was confined to *when* and *how* those legs are
 orchestrated, never to weakening them.

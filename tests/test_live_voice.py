@@ -3,7 +3,7 @@
 These PLAY TTS through the speakers and OPEN the real microphone, so they are marked `live` and should only be run when
 the user is away:  python -m pytest tests/test_live_voice.py -q -m live
 They validate the pieces that unit tests can only approximate: the adaptive endpointer on real recorded speech, real
-streaming/ack playback through SAPI, and — the key §13 check — that JARVIS speaking does NOT self-trigger barge-in.
+Gnani Timbre streaming/ack playback, and — the key §13 check — that JARVIS speaking does NOT self-trigger barge-in.
 """
 from __future__ import annotations
 
@@ -19,13 +19,16 @@ FIXTURE = ROOT / "tests" / "fixtures" / "open_notepad.wav"
 
 
 def _ready_tts():
+    from jarvis import config
     from jarvis.voice.tts import TTS
+    if not config.gnani_api_key():
+        pytest.skip("GNANI_API_KEY is not configured")
     tts = TTS()
     for _ in range(50):
         if tts.available:
             return tts
         time.sleep(0.1)
-    pytest.skip("SAPI TTS unavailable")
+    pytest.skip("Gnani Timbre or audio output unavailable")
 
 
 def test_adaptive_endpointer_on_real_speech():
@@ -58,7 +61,7 @@ def test_adaptive_endpointer_on_real_speech():
 
 
 def test_streaming_tts_real_playback():
-    """Stream a reply clause-by-clause through the real SAPI engine; it plays aloud, in order, resumes once, no dup."""
+    """Stream a reply clause-by-clause through Gnani Timbre; verify ordered playback and one resume."""
     from jarvis.voice.tts import StreamingSpeaker
     tts = _ready_tts()
     resumes = []

@@ -1,1 +1,1 @@
-"""Voice: mic → VAD → local Whisper → transcript."""
+"""Voice: microphone → VAD → Gnani Prisma transcript → Gnani Timbre speech."""

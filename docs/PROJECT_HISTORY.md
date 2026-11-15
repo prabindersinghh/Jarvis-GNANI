@@ -2,11 +2,11 @@
 
 A single record of everything built into JARVIS so far, in the order it happened, with dates. JARVIS is a personal
 Windows computer agent whose **only brain is Claude Code** (over the user's Claude login); the local engine under
-`jarvis/` is its hands, JEV (TypeSafe) is a fast reflex layer, and local Whisper + SAPI are its ears and voice. Product
+`jarvis/` is its hands, JEV (TypeSafe) is a fast reflex layer, and Gnani Prisma/Timbre provide its speech input/output. Product
 root: `D:\JARVIS`. Each phase below was built to an explicit directive, tested, and accepted (see `docs/ACCEPTANCE.md`).
 
 ## The idea
-One always-present orb on the Windows desktop that you talk to. It hears you locally (Whisper), thinks with Claude,
+One always-present orb on the Windows desktop that you talk to. It hears you through Gnani Prisma, thinks with Claude,
 and acts on the real computer through a Model-Context-Protocol tool surface (`computer_*`) that prefers the cheapest
 reliable control tier — deterministic shortcuts → UI Automation → a JEV reflex loop → OCR → vision — always verifying
 what it did, always asking a human before anything destructive, and never exceeding a hard ₹1,000/month JEV budget.
@@ -16,7 +16,7 @@ what it did, always asking a human before anything destructive, and never exceed
 ### 2026-09-21 — Phase 1: the agent (initial build)
 The `MASTER_BUILD_PROMPT`. Built the whole spine: the 18-tool MCP computer server (DPI-aware capture, SendInput,
 UIA element model, OCR), the router with its control tiers + verification + stale-state protection, the JEV adapter,
-local faster-whisper STT, SAPI TTS, the Claude Code session (agent SDK), the tray app, and the packaged desktop
+speech input/output adapters (now Gnani Prisma/Timbre), the Claude Code session (agent SDK), the tray app, and the packaged desktop
 launcher. Evidence: `docs/ACCEPTANCE.md` (24 unit + 12 live tests), `docs/TRD.md`, `docs/PRD.md`.
 
 ### 2026-09-21 — Phase 2: upgrade (see docs/UPGRADE_2026-09-21.md)
@@ -64,7 +64,7 @@ for an away session. 81→88 non-live tests green.
 
 ## Architecture at a glance
 ```
-voice (Whisper STT · adaptive endpoint · barge-in · SAPI TTS)  ─┐
+voice (Gnani Prisma STT · adaptive endpoint · barge-in · Gnani Timbre TTS)  ─┐
 orb UI (composition WebView2, per-pixel alpha, live ripple)     ├─►  JarvisApp (jarvis/app)  ─►  Claude Code (brain, agent SDK)
 daily history (SQLite) · memory · memory graph · learning (RL)  ─┘                                   │
                                                                                                      ▼

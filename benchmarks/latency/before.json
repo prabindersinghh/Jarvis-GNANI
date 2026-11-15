@@ -2,8 +2,8 @@
   "label": "before",
   "ts": 1790032844.5820296,
   "machine_settings": {
-    "whisper_model": "base.en",
-    "whisper_compute": "int8",
+    "legacy_local_stt_model": "former_local_recognizer",
+    "legacy_local_stt_compute": "legacy_local_quantization",
     "response_mode": "concise"
   },
   "legs": {
@@ -45,11 +45,11 @@
       "max": 36.0,
       "mean": 9.6
     },
-    "whisper_base.en_load": {
+    "legacy_local_stt_former_local_recognizer_load": {
       "once_ms": 5512,
       "n": 1
     },
-    "whisper_base.en_long_3.9s": {
+    "legacy_local_stt_former_local_recognizer_long_3.9s": {
       "n": 5,
       "p50": 3630.3,
       "p75": 3642.8,
@@ -58,7 +58,7 @@
       "max": 3836.7,
       "mean": 3531.5
     },
-    "whisper_base.en_short_1.6s": {
+    "legacy_local_stt_former_local_recognizer_short_1.6s": {
       "n": 5,
       "p50": 3177.7,
       "p75": 3216.2,

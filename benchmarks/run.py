@@ -3,7 +3,7 @@
     python -m benchmarks.run [--jev] [--claude]
 
 Layers: native input, UIA observe, element re-resolve + Invoke, verification, OCR, screenshot, MCP round-trip
-(stdio), Whisper (real audio fixture), JEV (only with a key and --jev), Claude turn (only with --claude; uses your
+(stdio), Gnani Prisma (real audio fixture; requires GNANI_API_KEY), JEV (only with a key and --jev), Claude turn (only with --claude; uses your
 Claude Code login), and a full deterministic launch→type→verify chain.
 """
 from __future__ import annotations
@@ -105,15 +105,15 @@ def main(argv):
     R["mcp_roundtrip_status_ms"] = {"n": len(xs), "median": round(statistics.median(xs)), "min": round(min(xs)), "max": round(max(xs))}
     R["mcp_roundtrip_observe_ms"] = {"n": len(ys), "median": round(statistics.median(ys)), "min": round(min(ys)), "max": round(max(ys))}
 
-    # Whisper
+    # Gnani Prisma (live API calls; requires GNANI_API_KEY)
     wav = ROOT / "tests" / "fixtures" / "open_notepad.wav"
     if wav.exists():
         from jarvis.voice.mic import load_wav
-        from jarvis.voice.whisper import engine
+        from jarvis.voice.prisma import engine
         audio = load_wav(str(wav))
         e = engine()
-        t0 = time.perf_counter(); e.load(); R["whisper_load_ms"] = {"n": 1, "median": round(ms(t0)), "min": round(ms(t0)), "max": round(ms(t0))}
-        R[f"whisper_{e.model_name}_{round(len(audio)/16000,1)}s_audio_ms"] = rep(lambda: e.transcribe(audio), 3)
+        t0 = time.perf_counter(); e.load(); R["prisma_ready_ms"] = {"n": 1, "median": round(ms(t0)), "min": round(ms(t0)), "max": round(ms(t0))}
+        R[f"prisma_{e.model_name}_{round(len(audio)/16000,1)}s_audio_ms"] = rep(lambda: e.transcribe(audio), 3)
 
     # JEV (live, optional)
     if "--jev" in argv:

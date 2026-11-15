@@ -46,7 +46,7 @@ JEV is not the brain.
 
 ## Voice
 
-Use **local Whisper** for speech-to-text.
+Use **Gnani Prisma** for speech-to-text and **Gnani Timbre** for text-to-speech.
 
 ## Computer
 
@@ -485,7 +485,7 @@ Build:
 ```text
 Microphone
 → VAD
-→ local Whisper
+→ Gnani Prisma
 → transcript
 → Claude Code
 ```
@@ -724,7 +724,7 @@ benchmarks/
 Measure:
 
 ```text
-Whisper latency
+Prisma latency
 Claude latency
 MCP latency
 UIA latency
@@ -874,7 +874,7 @@ Do not declare success until these are true:
 - [ ] VS Code is not required.
 
 ### Voice
-- [ ] local Whisper works.
+- [ ] Gnani Prisma and Timbre work with a configured API key.
 - [ ] microphone works.
 - [ ] transcript reaches the agent.
 

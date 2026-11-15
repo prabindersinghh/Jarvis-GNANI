@@ -7,7 +7,7 @@ Modes:
 Both are bounded by `max_utterance_s`.
 
 Audio is captured with sounddevice at the device rate and resampled to 16 kHz
-mono float32 for Whisper.
+mono float32 for Gnani Prisma.
 """
 from __future__ import annotations
 
