@@ -50,8 +50,8 @@ tell the user what they must do themselves (UAC, login, CAPTCHA, MFA) and wait w
 
 Dangerous operations (deleting, destructive git, security/registry/firewall, credentials, payments, publishing/sending)
 require confirmation — the tools ask the human automatically; do not try to bypass or re-run a denied action.
-Project root: D:\\JARVIS. The user's projects are typically under D:\\. Prefer PowerShell for shell work.
-""".strip()
+Project root: {root}. Prefer PowerShell for shell work.
+""".strip().replace("{root}", str(config.ROOT))
 
 MODE_PROMPTS = {
     "silent": "Response style: text only; keep the final answer to one or two short lines.",

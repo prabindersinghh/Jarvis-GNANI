@@ -2,7 +2,7 @@
 # Default target: the venv's pythonw.exe (Authenticode-signed by the Python Software Foundation) running the app
 # module, because Windows Smart App Control blocks freshly built unsigned executables such as dist\JARVIS.exe.
 # Pass -UseExe to target dist\JARVIS.exe instead (fine on machines without Smart App Control).
-param([string]$Root = "D:\JARVIS", [string]$Name = "JARVIS", [switch]$UseExe)
+param([string]$Root = (Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)), [string]$Name = "JARVIS", [switch]$UseExe)
 $ErrorActionPreference = "Stop"
 $exe = Join-Path $Root "dist\JARVIS.exe"
 $pyw = Join-Path $Root ".venv\Scripts\pythonw.exe"
