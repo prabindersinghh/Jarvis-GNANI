@@ -22,7 +22,7 @@ data/
 .venv/
 models/
 logs/
-dist/
+/dist/
 graphify-out/
 **/graphify-out/
 .cache/
