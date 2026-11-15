@@ -1,0 +1,93 @@
+[
+  {
+    "task": "notepad_save_reopen",
+    "ok": true,
+    "turns": 17,
+    "claude_ms": 48385,
+    "connect_ms": 13445,
+    "tool_calls": 16,
+    "jarvis_tool_calls": 15,
+    "tools": {
+      "ToolSearch": 1,
+      "mcp__jarvis__computer_app": 2,
+      "mcp__jarvis__computer_type": 3,
+      "mcp__jarvis__computer_key": 2,
+      "mcp__jarvis__computer_wait": 4,
+      "mcp__jarvis__computer_observe": 1,
+      "mcp__jarvis__computer_click": 1,
+      "mcp__jarvis__computer_window": 1,
+      "mcp__jarvis__computer_element": 1
+    },
+    "screenshots": 0,
+    "jev_calls": 0,
+    "uia_calls": 4,
+    "ocr": 0,
+    "tiers": {
+      "deterministic": 5
+    },
+    "input_tokens": 34,
+    "output_tokens": 2299,
+    "cache_read": 606691,
+    "cache_create": 20390,
+    "reply": "On it \u2014 loading the computer tools first.The Notepad tab had leftover text (\"OCR TARGET TEXT\"), so I'll cancel, replace the content, and save again.Title now shows only our text. Filling in the filena"
+  },
+  {
+    "task": "calculator",
+    "ok": true,
+    "turns": 7,
+    "claude_ms": 21802,
+    "connect_ms": 12253,
+    "tool_calls": 6,
+    "jarvis_tool_calls": 5,
+    "tools": {
+      "ToolSearch": 1,
+      "mcp__jarvis__computer_app": 1,
+      "mcp__jarvis__computer_key": 2,
+      "mcp__jarvis__computer_element": 2
+    },
+    "screenshots": 0,
+    "jev_calls": 0,
+    "uia_calls": 2,
+    "ocr": 0,
+    "tiers": {
+      "deterministic": 3
+    },
+    "input_tokens": 14,
+    "output_tokens": 986,
+    "cache_read": 201890,
+    "cache_create": 11092,
+    "reply": "Opening Calculator now.Display reads 12,834 \u2014 the `*` got sent as a plain `8`. Retrying with the multiply key.12 \u00d7 34 = **408**, verified on the Calculator display.\n\nNote: `computer_key` sends `*` as "
+  },
+  {
+    "task": "edge_form",
+    "ok": true,
+    "turns": 9,
+    "claude_ms": 27535,
+    "connect_ms": 11901,
+    "tool_calls": 8,
+    "jarvis_tool_calls": 7,
+    "tools": {
+      "ToolSearch": 1,
+      "mcp__jarvis__computer_app": 1,
+      "mcp__jarvis__computer_observe": 1,
+      "mcp__jarvis__computer_element": 1,
+      "mcp__jarvis__computer_type": 1,
+      "mcp__jarvis__computer_click": 1,
+      "mcp__jarvis__computer_wait": 1,
+      "mcp__jarvis__computer_window": 1
+    },
+    "screenshots": 0,
+    "jev_calls": 0,
+    "uia_calls": 3,
+    "ocr": 0,
+    "tiers": {
+      "deterministic": 1,
+      "uia": 1
+    },
+    "input_tokens": 18,
+    "output_tokens": 1156,
+    "cache_read": 293862,
+    "cache_create": 16714,
+    "reply": "On it \u2014 opening the page in Edge now.Done. Verified: Name field read back \"Bob Marley\", Submit clicked, page showed \"CLICKED:Bob Marley\", and the Edge window is closed."
+  }
+]

@@ -1,0 +1,129 @@
+{
+  "episodes": 12,
+  "tasks_per_episode": 3,
+  "per_episode": [
+    {
+      "episode": 1,
+      "jev_calls": 3,
+      "served_locally": 0,
+      "success": 3,
+      "policy_version": 1
+    },
+    {
+      "episode": 2,
+      "jev_calls": 3,
+      "served_locally": 0,
+      "success": 3,
+      "policy_version": 1
+    },
+    {
+      "episode": 3,
+      "jev_calls": 3,
+      "served_locally": 0,
+      "success": 3,
+      "policy_version": 1
+    },
+    {
+      "episode": 4,
+      "jev_calls": 3,
+      "served_locally": 0,
+      "success": 3,
+      "policy_version": 1
+    },
+    {
+      "episode": 5,
+      "jev_calls": 3,
+      "served_locally": 0,
+      "success": 3,
+      "policy_version": 2
+    },
+    {
+      "episode": 6,
+      "jev_calls": 0,
+      "served_locally": 3,
+      "success": 3,
+      "policy_version": 2
+    },
+    {
+      "episode": 7,
+      "jev_calls": 0,
+      "served_locally": 3,
+      "success": 3,
+      "policy_version": 2
+    },
+    {
+      "episode": 8,
+      "jev_calls": 0,
+      "served_locally": 3,
+      "success": 3,
+      "policy_version": 2
+    },
+    {
+      "episode": 9,
+      "jev_calls": 0,
+      "served_locally": 3,
+      "success": 3,
+      "policy_version": 2
+    },
+    {
+      "episode": 10,
+      "jev_calls": 0,
+      "served_locally": 3,
+      "success": 3,
+      "policy_version": 2
+    },
+    {
+      "episode": 11,
+      "jev_calls": 0,
+      "served_locally": 3,
+      "success": 3,
+      "policy_version": 2
+    },
+    {
+      "episode": 12,
+      "jev_calls": 0,
+      "served_locally": 3,
+      "success": 3,
+      "policy_version": 2
+    }
+  ],
+  "early": {
+    "episode": 1,
+    "jev_calls": 3,
+    "served_locally": 0,
+    "success": 3,
+    "policy_version": 1
+  },
+  "late": {
+    "episode": 12,
+    "jev_calls": 0,
+    "served_locally": 3,
+    "success": 3,
+    "policy_version": 2
+  },
+  "status": {
+    "enabled": true,
+    "worker": "stopped",
+    "learning_now": false,
+    "production_version": 2,
+    "candidate_version": 2,
+    "parent_version": 1,
+    "contexts": 3,
+    "arms": 3,
+    "experiences": 36,
+    "served_by_policy": 21,
+    "jev_avoided": 0,
+    "corrections": 0,
+    "promotions": 1,
+    "rollbacks": 0,
+    "last_promotion": "2026-09-21T21:37:53",
+    "last_rollback": null,
+    "baseline_reward": 1.35,
+    "live_reward": 1.35
+  },
+  "jev_calls_first": 3,
+  "jev_calls_last": 0,
+  "success_first": "3/3",
+  "success_last": "3/3",
+  "promotions": 1
+}

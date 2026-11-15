@@ -1,0 +1,44 @@
+# ── JARVIS .gitignore ───────────────────────────────────────────────────────
+# Goal: NOTHING private ever reaches GitHub, even if this repo is later made public.
+# Secrets (the JEV/TypeSafe API key) and ALL personal data are excluded; the code + docs are what gets backed up,
+# and `launcher/install.ps1` rebuilds the venv, models and packaged exe from scratch on a fresh clone.
+
+# ── secrets — never commit (defense in depth; the real key lives in data/config/.env) ──
+.env
+*.env
+**/.env
+*.key
+*.pem
+*_secret*
+*secret.json
+secrets.*
+!.env.example
+!**/.env.example
+
+# ── personal / private data (conversations, memory, experiences, policies, budget ledger, session ids, graph) ──
+data/
+
+# ── large, rebuildable, or machine-specific artifacts ──
+.venv/
+models/
+logs/
+dist/
+graphify-out/
+**/graphify-out/
+.cache/
+
+# ── python / tooling junk ──
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+*.egg-info/
+.mypy_cache/
+.ruff_cache/
+
+# ── test / OS junk ──
+tests/fixtures/page.html
+*.jarvis-backup.*
+Thumbs.db
+desktop.ini
+.DS_Store

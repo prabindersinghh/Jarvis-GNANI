@@ -1,0 +1,83 @@
+[
+  {
+    "task": "notepad_save_reopen",
+    "ok": true,
+    "turns": 4,
+    "claude_ms": 27748,
+    "connect_ms": 10169,
+    "tool_calls": 3,
+    "jarvis_tool_calls": 2,
+    "tools": {
+      "ToolSearch": 1,
+      "mcp__jarvis__computer_run": 2
+    },
+    "screenshots": 0,
+    "jev_calls": 0,
+    "uia_calls": 2,
+    "ocr": 0,
+    "tiers": {
+      "deterministic": 6
+    },
+    "input_tokens": 8,
+    "output_tokens": 1025,
+    "cache_read": 110936,
+    "cache_create": 17538,
+    "reply": "On it \u2014 opening Notepad and saving the note now.Done. The note was saved to bench.txt with no overwrite prompt, Notepad closed, and on reopening the file its content reads exactly \"JARVIS benchmark OK"
+  },
+  {
+    "task": "calculator",
+    "ok": true,
+    "turns": 8,
+    "claude_ms": 54347,
+    "connect_ms": 11820,
+    "tool_calls": 7,
+    "jarvis_tool_calls": 5,
+    "tools": {
+      "ToolSearch": 2,
+      "mcp__jarvis__computer_run": 3,
+      "mcp__jarvis__computer_observe": 1,
+      "mcp__jarvis__computer_memory": 1
+    },
+    "screenshots": 0,
+    "jev_calls": 0,
+    "uia_calls": 4,
+    "ocr": 0,
+    "tiers": {
+      "deterministic": 22
+    },
+    "input_tokens": 16,
+    "output_tokens": 1781,
+    "cache_read": 284354,
+    "cache_create": 25673,
+    "reply": "Opening Calculator and typing 12*34 now.The keys were sent before Calculator finished loading (display still 0). Retyping now that it's ready.Verified: Calculator's display reads 408. Saving the keybo"
+  },
+  {
+    "task": "edge_form",
+    "ok": true,
+    "turns": 12,
+    "claude_ms": 74735,
+    "connect_ms": 9213,
+    "tool_calls": 11,
+    "jarvis_tool_calls": 9,
+    "tools": {
+      "ToolSearch": 2,
+      "mcp__jarvis__computer_run": 5,
+      "mcp__jarvis__computer_type": 1,
+      "mcp__jarvis__computer_observe": 2,
+      "mcp__jarvis__computer_memory": 1
+    },
+    "screenshots": 0,
+    "jev_calls": 0,
+    "uia_calls": 11,
+    "ocr": 0,
+    "tiers": {
+      "deterministic": 3,
+      "uia": 3
+    },
+    "input_tokens": 24,
+    "output_tokens": 2655,
+    "cache_read": 450987,
+    "cache_create": 28186,
+    "reply": "On it \u2014 opening the page in a new Edge window and running the form.The text landed on the label, not the input \u2014 retyping into the actual field.Window is now on-screen and focused. Clicking the field "
+  }
+]

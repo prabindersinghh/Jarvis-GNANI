@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<title>JARVIS</title>
+<meta name="color-scheme" content="dark">
+<style>
+  :root {
+    --ink: #eaf1fb; --ink-2: #a9b8d0; --ink-3: #6f7f9a;
+    --line: rgba(190, 215, 255, .12); --line-hi: rgba(190, 225, 255, .28);
+    --c1: 120, 170, 255; --c2: 150, 150, 255;            /* state colour pair (rgb triplets) */
+    --glass-1: rgba(20, 26, 44, .82); --glass-2: rgba(10, 14, 25, .88);
+    --font: "Segoe UI Variable Text", "Segoe UI", Inter, system-ui, sans-serif;
+    --ease: cubic-bezier(.2, .9, .25, 1);               /* spring-ish */
+    --isl-w: 208px;                                       /* collapsed pill width (auto-ish) */
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; background: transparent; overflow: hidden; }
+  body { font-family: var(--font); color: var(--ink); -webkit-font-smoothing: antialiased; user-select: none; }
+  #stage { position: absolute; inset: 0; }
+
+  /* ===================== the Dynamic Island — one object that transforms (top-center) ===================== */
+  /* Collapsed: a compact glass pill [orb · JARVIS]. Active: it grows DOWN into a glass panel; the bar stays at top,
+     the conversation/input materialise below. One element morphs — no window resize, no second surface. */
+  #island {
+    position: absolute; top: 6px; left: 50%; transform: translateX(-50%);
+    width: var(--isl-w); border-radius: 30px; overflow: hidden;
+    background: linear-gradient(158deg, var(--glass-1), var(--glass-2));
+    border: 1px solid var(--line-hi);
+    box-shadow: 0 18px 44px rgba(0,0,0,.5), 0 0 30px rgba(var(--c1),.14), inset 0 1px 0 rgba(255,255,255,.08);
+    transition: width .34s var(--ease), border-radius .34s var(--ease), box-shadow .6s ease, background .8s ease;
+    will-change: width, border-radius;
+  }
+  #island::before { content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: inherit;
+    background: radial-gradient(520px 260px at 50% -30%, rgba(var(--c1),.20), transparent 60%),
+                radial-gradient(420px 220px at 100% 120%, rgba(var(--c2),.12), transparent 62%);
+    transition: background 1s ease; }
+  #island::after { content: ""; position: absolute; inset: 0; pointer-events: none; border-radius: inherit;
+    box-shadow: inset 0 0 0 1px rgba(var(--c1),.14), inset 0 0 26px rgba(var(--c1),.07); transition: box-shadow .8s ease; }
+  body.active #island { width: 600px; border-radius: 26px;
+    box-shadow: 0 44px 96px rgba(0,0,0,.6), 0 0 54px rgba(var(--c1),.16), inset 0 1px 0 rgba(255,255,255,.1); }
+
+  /* the always-visible bar: orb + wordmark (+ header controls when active) */
+  #bar { position: relative; display: flex; align-items: center; gap: 9px; padding: 8px 16px 8px 10px; cursor: pointer; height: 56px; }
+  body.active #bar { cursor: default; padding: 12px 14px 8px 14px; }
+  #orb { position: relative; width: 40px; height: 40px; flex: 0 0 auto; }
+  #orb-canvas { position: absolute; left: 50%; top: 50%; width: 78px; height: 78px; transform: translate(-50%, -50%);
+                pointer-events: none; display: block; }
+  #bar:active #orb { transform: scale(.94); transition: transform .12s ease; }
+  .wordmark { font-weight: 600; letter-spacing: .30em; font-size: 12.5px; color: var(--ink); padding-left: 2px;
+              text-shadow: 0 0 12px rgba(var(--c1),.35); white-space: nowrap; }
+  #bar .state { font-size: 11.5px; color: var(--ink-3); margin-left: 2px; white-space: nowrap;
+                max-width: 0; overflow: hidden; opacity: 0; transition: max-width .3s var(--ease), opacity .3s ease; }
+  body.busy #bar .state, body.active #bar .state { max-width: 160px; opacity: 1; }
+  .hspace { flex: 1; }
+  /* health dot: a single at-a-glance indicator; full status lives behind the gear (Settings) */
+  #health { width: 7px; height: 7px; border-radius: 50%; background: var(--ink-3); flex: 0 0 auto;
+            box-shadow: 0 0 8px rgba(var(--ink-3), .0); transition: background .5s, box-shadow .5s; display: none; }
+  #health.ok { background: #6fe3a6; box-shadow: 0 0 9px rgba(111,227,166,.7); }
+  #health.warn { background: #ffb08a; box-shadow: 0 0 9px rgba(255,176,138,.75); }
+  body.active #health { display: block; }
+  .hbtns { display: none; align-items: center; gap: 6px; }
+  body.active .hbtns { display: inline-flex; }
+  .datenav { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--ink-3); }
+  .datenav button { appearance: none; background: none; border: 0; color: var(--ink-3); cursor: pointer; font-size: 13px; padding: 0 2px; border-radius: 6px; line-height: 1; }
+  .datenav button:hover:not(:disabled) { color: var(--ink); } .datenav button:disabled { opacity: .3; cursor: default; }
+  .datenav b { color: var(--ink-2); font-weight: 600; letter-spacing: .03em; font-size: 10.5px; }
+  .ibtn { appearance: none; border: 1px solid var(--line); background: rgba(255,255,255,.04); color: var(--ink-2); border-radius: 9px;
+          width: 28px; height: 28px; display: grid; place-items: center; padding: 0; cursor: pointer; transition: background .2s, color .2s, border-color .2s, transform .12s; }
+  .ibtn:hover, .ibtn:focus-visible { background: rgba(255,255,255,.09); color: var(--ink); border-color: var(--line-hi); outline: none; }
+  .ibtn:active { transform: scale(.93); }
+  .ibtn svg { width: 15px; height: 15px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
+  .ibtn.stop { color: #ffb08a; display: none; } body.busy .hbtns .ibtn.stop { display: grid; }
+
+  /* the expandable content (revealed only when active) */
+  #hud { max-height: 0; opacity: 0; overflow: hidden; transition: max-height .34s var(--ease), opacity .22s ease;
+         display: grid; grid-template-rows: auto minmax(0, 1fr) auto; gap: 10px; padding: 0 16px; }
+  body.active #hud { max-height: 520px; opacity: 1; padding: 2px 16px 14px; }
+  #hud > * { opacity: 0; transform: translateY(6px); transition: opacity .3s ease .12s, transform .34s var(--ease) .12s; }
+  body.active #hud > * { opacity: 1; transform: none; }
+
+  #activity { font-size: 12px; color: var(--ink-3); min-height: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #activity:not(:empty)::before { content: ""; display: inline-block; width: 5px; height: 5px; border-radius: 50%;
+    background: rgb(var(--c2)); margin-right: 8px; vertical-align: 2px; box-shadow: 0 0 7px rgb(var(--c2)); }
+
+  /* transcript — elegant, not chat bubbles */
+  #log { overflow: auto; padding-right: 6px; min-height: 120px; max-height: 380px; scrollbar-width: thin; scrollbar-color: var(--line) transparent; }
+  #log:empty::before { content: "Today's conversation appears here. Ask for anything on this PC."; color: var(--ink-3); font-size: 12.5px; }
+  .msg { margin: 0 0 12px; }
+  .msg .who { font-size: 9.5px; letter-spacing: .15em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 3px; display: flex; gap: 8px; align-items: baseline; }
+  .msg.you .who { color: rgb(var(--c1)); }
+  .msg .who time { color: var(--ink-3); letter-spacing: .02em; font-size: 9.5px; opacity: .8; }
+  .msg .body { font-size: 13.5px; line-height: 1.5; color: var(--ink); white-space: pre-wrap; word-break: break-word; }
+  .msg.you .body { color: var(--ink-2); }
+  .msg.pending .body::after { content: "▍"; color: rgb(var(--c1)); animation: caret 1s step-end infinite; }
+  @keyframes caret { 50% { opacity: 0; } }
+  .divider { display: flex; align-items: center; gap: 10px; margin: 6px 0 14px; color: var(--ink-3); font-size: 9px; letter-spacing: .16em; text-transform: uppercase; }
+  .divider::before, .divider::after { content: ""; height: 1px; background: linear-gradient(90deg, transparent, var(--line), transparent); flex: 1; }
+  .divider.end { opacity: .55; }
+
+  .inrow { display: flex; gap: 8px; align-items: center; }
+  #input { flex: 1; appearance: none; border: 1px solid var(--line); border-radius: 13px; background: rgba(0,0,0,.26); color: var(--ink);
+           padding: 10px 14px; font: inherit; font-size: 13.5px; outline: none; transition: border-color .25s, box-shadow .25s; }
+  #input::placeholder { color: var(--ink-3); }
+  #input:focus { border-color: rgba(var(--c1),.55); box-shadow: 0 0 0 4px rgba(var(--c1),.12); }
+  #mic { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; padding: 0; border: 1px solid var(--line);
+         background: rgba(255,255,255,.04); color: var(--ink-2); cursor: pointer; transition: background .2s, color .2s, border-color .2s, transform .12s; }
+  #mic:hover { background: rgba(255,255,255,.09); color: var(--ink); }
+  #mic:active { transform: scale(.94); }
+  #mic svg { width: 17px; height: 17px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; }
+  #mic.on { color: #ff6b7a; border-color: rgba(255,107,122,.55); box-shadow: 0 0 0 4px rgba(255,107,122,.12); }
+
+  /* ===================== settings surface (status + controls live here, NOT in the first view) ============ */
+  #settings { position: absolute; z-index: 6; left: 14px; right: 14px; top: 60px; border-radius: 20px; padding: 16px 18px; display: none;
+    background: linear-gradient(160deg, rgba(20,26,44,.97), rgba(10,14,25,.98)); border: 1px solid var(--line-hi);
+    box-shadow: 0 30px 70px rgba(0,0,0,.6), 0 0 40px rgba(var(--c1),.1); }
+  #settings.show { display: block; }
+  #settings h4 { margin: 0 0 12px; font-size: 10.5px; letter-spacing: .2em; color: var(--ink-3); font-weight: 600; text-transform: uppercase; }
+  #status { display: grid; grid-template-columns: 1fr 1fr; gap: 9px 18px; margin-bottom: 14px; }
+  #status .s { display: inline-flex; align-items: center; gap: 8px; font-size: 11px; letter-spacing: .04em; color: var(--ink-3); }
+  #status .s i { width: 6px; height: 6px; border-radius: 50%; background: var(--ink-3); flex: 0 0 auto; }
+  #status .s.ok i { background: #6fe3a6; box-shadow: 0 0 6px rgba(111,227,166,.8); }
+  #status .s.warn i { background: #ffb08a; box-shadow: 0 0 6px rgba(255,176,138,.8); }
+  #status .s b { color: var(--ink-2); font-weight: 600; }
+  #status .s em { font-style: normal; color: var(--ink-3); letter-spacing: 0; }
+  #settings .srow { display: flex; flex-wrap: wrap; gap: 8px; }
+  #settings .srow .btn { flex: 0 0 auto; }
+  .btn { appearance: none; border: 1px solid var(--line); background: rgba(255,255,255,.04); color: var(--ink-2); border-radius: 10px;
+         padding: 7px 12px; font: inherit; font-size: 12px; cursor: pointer; transition: background .2s, color .2s, border-color .2s, transform .12s; }
+  .btn:hover, .btn:focus-visible { background: rgba(255,255,255,.09); color: var(--ink); border-color: var(--line-hi); outline: none; }
+  .btn:active { transform: scale(.96); }
+
+  /* ===================== context menu (right-click) ===================== */
+  #menu { position: absolute; z-index: 7; top: 60px; left: 50%; transform: translateX(-50%) translateY(6px) scale(.98); min-width: 170px; padding: 7px; border-radius: 15px;
+          background: linear-gradient(160deg, rgba(22,28,46,.97), rgba(12,16,27,.98)); border: 1px solid var(--line-hi);
+          box-shadow: 0 22px 50px rgba(0,0,0,.55), 0 0 30px rgba(var(--c1),.08); opacity: 0; pointer-events: none; transform-origin: 50% 0;
+          transition: opacity .16s ease, transform .2s var(--ease); }
+  #menu.show { opacity: 1; transform: translateX(-50%); pointer-events: auto; }
+  #menu button { display: block; width: 100%; text-align: left; appearance: none; background: none; border: 0; color: var(--ink); padding: 8px 11px;
+                 border-radius: 9px; font: inherit; font-size: 12.5px; cursor: pointer; }
+  #menu button:hover, #menu button:focus-visible { background: rgba(255,255,255,.08); outline: none; }
+  #menu .sep { height: 1px; background: var(--line); margin: 5px 6px; }
+
+  /* ===================== safety confirm card ===================== */
+  #confirm { position: absolute; z-index: 8; left: 14px; right: 14px; top: 60px; border-radius: 20px; padding: 16px 18px; display: none;
+             background: rgba(16,20,32,.98); border: 1px solid rgba(255,176,138,.5); box-shadow: 0 30px 70px rgba(0,0,0,.6), 0 0 40px rgba(255,140,90,.12); }
+  #confirm.show { display: block; }
+  #confirm h4 { margin: 0 0 8px; font-size: 11px; letter-spacing: .18em; color: #ffb08a; font-weight: 600; }
+  #confirm p { margin: 0 0 12px; font-size: 13px; color: var(--ink); white-space: pre-wrap; max-height: 150px; overflow: auto; line-height: 1.45; }
+  #confirm .row { display: flex; gap: 8px; justify-content: flex-end; }
+
+  @media (prefers-reduced-motion: reduce) { #island, #hud, #hud > *, #menu, #bar .state { transition: none; } }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="island" role="dialog" aria-label="JARVIS">
+    <div id="bar">
+      <div id="orb" role="button" tabindex="0" aria-label="JARVIS — click to open">
+        <canvas id="orb-canvas" width="156" height="156" role="img" aria-label="JARVIS idle"></canvas>
+      </div>
+      <span class="wordmark">JARVIS</span>
+      <span class="state" id="state-text" aria-live="polite"></span>
+      <span class="hspace"></span>
+      <span class="hbtns">
+        <span class="datenav"><button id="date-prev" title="Previous day" aria-label="Previous day">‹</button><b id="date-label">Today</b><button id="date-next" title="Next day" aria-label="Next day">›</button></span>
+        <span id="health" title="System status — open Settings"></span>
+        <button class="ibtn stop" id="btn-stop" title="Stop (Ctrl+Alt+X)" aria-label="Stop"><svg viewBox="0 0 24 24"><rect x="6" y="6" width="12" height="12" rx="2"/></svg></button>
+        <button class="ibtn" id="btn-settings" title="Settings & status" aria-label="Settings"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M2 12h3M19 12h3M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1"/></svg></button>
+        <button class="ibtn" id="btn-close" title="Close (Esc)" aria-label="Close"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
+      </span>
+    </div>
+
+    <div id="hud">
+      <div id="activity" aria-live="polite"></div>
+      <div id="log" tabindex="0" aria-label="Conversation"></div>
+      <div class="inrow">
+        <input id="input" type="text" placeholder="Ask JARVIS…" autocomplete="off" spellcheck="false" aria-label="Command">
+        <button id="mic" title="Listen (Ctrl+Alt+J)" aria-label="Listen">
+          <svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div id="settings" role="region" aria-label="Settings and status">
+      <h4>System status</h4>
+      <div id="status" aria-label="System status"></div>
+      <h4>Controls</h4>
+      <div class="srow">
+        <button class="btn" data-act="mute" id="mute-item">Mute voice</button>
+        <button class="btn" data-act="settings">Settings file</button>
+        <button class="btn" data-act="hide">Hide</button>
+        <button class="btn" data-act="quit">Exit</button>
+      </div>
+    </div>
+  </div>
+
+  <nav id="menu" role="menu" aria-hidden="true">
+    <button role="menuitem" data-act="activate">Open</button>
+    <button role="menuitem" data-act="listen">Listen</button>
+    <button role="menuitem" data-act="mute" id="mute-item2">Mute voice</button>
+    <div class="sep"></div>
+    <button role="menuitem" data-act="hide">Hide</button>
+    <button role="menuitem" data-act="quit">Exit</button>
+  </nav>
+
+  <div id="confirm" role="alertdialog" aria-modal="true">
+    <h4>CONFIRM</h4><p id="confirm-text"></p>
+    <div class="row"><button class="btn" id="confirm-no">Deny</button><button class="btn" id="confirm-yes" style="color:#6fe3a6">Allow</button></div>
+  </div>
+</div>
+
+<script>
+/* thinking-orbs engine (MIT © 2026 Jakub Antalik — https://github.com/Jakubantalik/thinking-orbs, v0.3.1).
+   Inlined verbatim by jarvis/ui/build.py; JARVIS uses its geometry (MODE_FRAMES/resolvePreset) with its own colour painter. */
+/*__THINKING_ORBS_ENGINE__*/
+</script>
+<script>
+(function () {
+  "use strict";
+  const E = window.ThinkingOrbsEngine;
+  const $ = (id) => document.getElementById(id);
+  const canvas = $("orb-canvas"), ctx = canvas.getContext("2d");
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)");
+  const bridge = (window.chrome && window.chrome.webview) ? window.chrome.webview : null;
+  const send = (o) => { if (bridge) bridge.postMessage(JSON.stringify(o)); };
+
+  // ---- real runtime state → thinking-orbs mode + membrane character + ambient palette (premium slow shifts) ----
+  const STATES = {
+    starting:     { mode: "connecting", label: "starting",     c1: [110,160,255], c2: [150,140,255], glow: .42, energy: .6 },
+    connecting:   { mode: "connecting", label: "connecting",   c1: [100,170,255], c2: [150,140,255], glow: .46, energy: .7 },
+    idle:         { mode: "breathing",  label: "",             c1: [96,140,225],  c2: [124,150,240], glow: .32, energy: .32, speed: .8 },
+    listening:    { mode: "listening",  label: "listening",    c1: [70,225,255],  c2: [60,150,255],  glow: .74, energy: .95 },
+    transcribing: { mode: "solving",    label: "hearing",      c1: [130,150,255], c2: [170,120,255], glow: .58, energy: .8 },
+    thinking:     { mode: "solving",    label: "thinking",     c1: [150,115,255], c2: [110,90,240],  glow: .62, energy: .85 },
+    acting:       { mode: "working",    label: "working",      c1: [90,150,255],  c2: [160,120,255], glow: .64, energy: 1.0, flow: 1 },
+    searching:    { mode: "searching",  label: "searching",    c1: [80,220,255],  c2: [230,110,220], glow: .64, energy: .9, spectrum: true },
+    responding:   { mode: "composing",  label: "responding",   c1: [120,230,255], c2: [235,140,235], glow: .82, energy: 1.05, bright: 1.15 },
+    speaking:     { mode: "composing",  label: "speaking",     c1: [120,230,255], c2: [235,140,235], glow: .88, energy: 1.15, bright: 1.15 },
+    learning:     { mode: "weaving",    label: "learning",     c1: [90,210,190],  c2: [120,170,255], glow: .5, energy: .55, speed: .8 },
+    success:      { mode: "breathing",  label: "done",         c1: [110,230,170], c2: [120,200,255], glow: .78, energy: .8, wave: 1 },
+    error:        { mode: "breathing",  label: "error",        c1: [255,150,110], c2: [255,100,120], glow: .58, energy: .55, speed: .8 },
+    off:          { mode: "breathing",  label: "off",          c1: [110,120,140], c2: [90,100,120],  glow: .16, energy: .2, speed: .5 },
+  };
+  let cur = "starting", spec = STATES.starting, active = false, listening = false, speaking = false, busy = false;
+  let resolved = E.resolvePreset(spec.mode, 64);
+  const BOX = 78;                                    // css px canvas box (orb ~40 + glow margin) — small, lives in the pill
+  const dpr = Math.min(2, devicePixelRatio || 1);
+  canvas.width = Math.round(BOX * dpr); canvas.height = Math.round(BOX * dpr);
+  canvas.style.width = BOX + "px"; canvas.style.height = BOX + "px";
+  const lerp = (a, b, f) => a + (b - a) * f;
+  const lerp3 = (a, b, f) => [lerp(a[0],b[0],f), lerp(a[1],b[1],f), lerp(a[2],b[2],f)];
+
+  let eNow = spec.energy, gNow = spec.glow, cA = spec.c1.slice(), cB = spec.c2.slice(), speakEnv = 0, flowNow = 0, waveEnv = 0;
+
+  // ---- the living orb: glow + liquid membrane + inner thinking-orbs core, all on one canvas ----------------
+  const NPTS = 72, BASE_R = 18;                       // membrane base radius (css px) — sized for the compact pill orb
+  function draw(t) {
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, BOX, BOX);
+    const cxp = BOX / 2, cyp = BOX / 2;
+    eNow = lerp(eNow, spec.energy, 0.06); gNow = lerp(gNow, spec.glow, 0.05);
+    cA = lerp3(cA, spec.c1, 0.05); cB = lerp3(cB, spec.c2, 0.05);
+    flowNow = lerp(flowNow, spec.flow || 0, 0.05);
+    waveEnv = lerp(waveEnv, spec.wave || 0, 0.04);
+    if (speaking) speakEnv = lerp(speakEnv, 0.6 + 0.4 * Math.abs(Math.sin(t * 6.0)), 0.3); else speakEnv = lerp(speakEnv, 0, 0.08);
+    const energy = eNow + speakEnv * 0.5;
+    const col = (mix, a) => { const c = lerp3(cA, cB, mix); return `rgba(${c[0]|0},${c[1]|0},${c[2]|0},${a})`; };
+
+    const breath = 1 + 0.05 * Math.sin(t * 0.9) + speakEnv * 0.06 + waveEnv * 0.12 * Math.max(0, Math.sin(t * 3));
+    const gR = (BASE_R + 16) * breath;
+    const g = ctx.createRadialGradient(cxp, cyp, BASE_R * 0.3, cxp, cyp, gR);
+    g.addColorStop(0, col(0.2, 0.34 * gNow)); g.addColorStop(0.42, col(0.6, 0.16 * gNow)); g.addColorStop(1, "rgba(0,0,0,0)");
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(cxp, cyp, gR, 0, 6.2832); ctx.fill();
+
+    const body = ctx.createRadialGradient(cxp - 5, cyp - 6, 2, cxp, cyp, BASE_R + 2);
+    body.addColorStop(0, "rgba(40,54,84,0.6)"); body.addColorStop(0.5, "rgba(14,20,36,0.64)"); body.addColorStop(1, "rgba(6,9,18,0.7)");
+    ctx.fillStyle = body; ctx.beginPath(); ctx.arc(cxp, cyp, BASE_R + 1, 0, 6.2832); ctx.fill();
+
+    const coreSize = BASE_R * 1.7;
+    ctx.save();
+    ctx.translate(cxp - coreSize / 2, cyp - coreSize / 2);
+    paintCore(E.MODE_FRAMES[resolved.mode](coreSize, t * (spec.speed || 1), resolved.opts), t, coreSize);
+    ctx.restore();
+
+    const pts = [];
+    const A = 0.6 + 1.3 * energy;
+    for (let i = 0; i < NPTS; i++) {
+      const th = (i / NPTS) * 6.2832;
+      const wob = A * (0.60 * Math.sin(2 * th + t * 0.55)
+                     + 0.42 * Math.sin(3 * th - t * 1.05 + flowNow * th * 2)
+                     + 0.20 * Math.sin(5 * th + t * 1.6)
+                     + 0.09 * Math.sin(8 * th - t * 2.4 + 1.7));
+      const r = BASE_R * breath + wob;
+      pts.push([cxp + r * Math.cos(th), cyp + r * Math.sin(th), wob]);
+    }
+    const curve = (P) => {
+      ctx.beginPath();
+      const n = P.length, mid0 = [(P[n - 1][0] + P[0][0]) / 2, (P[n - 1][1] + P[0][1]) / 2];
+      ctx.moveTo(mid0[0], mid0[1]);
+      for (let i = 0; i < n; i++) { const c = P[i], nx = P[(i + 1) % n]; ctx.quadraticCurveTo(c[0], c[1], (c[0] + nx[0]) / 2, (c[1] + nx[1]) / 2); }
+      ctx.closePath();
+    };
+    ctx.lineJoin = "round";
+    curve(pts);
+    ctx.strokeStyle = col(0.5, 0.48 + 0.24 * energy); ctx.lineWidth = 1.4 + 0.7 * energy;
+    ctx.shadowColor = col(0.4, 0.85); ctx.shadowBlur = 6 + 8 * gNow; ctx.stroke();
+    ctx.shadowBlur = 0;
+    for (let i = 0; i < NPTS; i++) {
+      const p = pts[i], q = pts[(i + 1) % NPTS], hh = (p[2] + q[2]) / 2;
+      if (hh <= 0.15) continue;
+      const m0 = [(pts[(i - 1 + NPTS) % NPTS][0] + p[0]) / 2, (pts[(i - 1 + NPTS) % NPTS][1] + p[1]) / 2];
+      const m1 = [(p[0] + q[0]) / 2, (p[1] + q[1]) / 2];
+      ctx.beginPath(); ctx.moveTo(m0[0], m0[1]); ctx.quadraticCurveTo(p[0], p[1], m1[0], m1[1]);
+      ctx.strokeStyle = col(0.12, Math.min(0.85, 0.2 + hh / A * 0.55)); ctx.lineWidth = 0.6 + (hh / A) * 1.4; ctx.stroke();
+    }
+    const sp = ctx.createRadialGradient(cxp - 6, cyp - 7, 1, cxp - 6, cyp - 7, 11);
+    sp.addColorStop(0, "rgba(255,255,255,0.20)"); sp.addColorStop(1, "rgba(255,255,255,0)");
+    ctx.fillStyle = sp; ctx.beginPath(); ctx.arc(cxp - 6, cyp - 7, 11, 0, 6.2832); ctx.fill();
+  }
+
+  function paintCore(frame, t, size) {
+    const bright = spec.bright || 1, drift = 0.5 + 0.5 * Math.sin(t * 0.35);
+    for (const ln of frame.lines) {
+      const d = 1 - ln.white, c = lerp3(cA, cB, 0.5);
+      ctx.strokeStyle = `rgba(${c[0]|0},${c[1]|0},${c[2]|0},${((ln.a == null ? 1 : ln.a) * (0.2 + 0.5 * d)).toFixed(3)})`;
+      ctx.lineWidth = ln.w; ctx.beginPath(); ctx.moveTo(ln.x1, ln.y1); ctx.lineTo(ln.x2, ln.y2); ctx.stroke();
+    }
+    const n = frame.dots.length;
+    for (let i = 0; i < n; i++) {
+      const d = frame.dots[i], depth = 1 - d.white;
+      if (spec.spectrum) { const h = (195 + 140 * (i / n) + (t * 22) % 360) % 360; ctx.fillStyle = `hsl(${h} 85% ${52 + 26 * depth}%)`; }
+      else { const f = Math.min(1, Math.max(0, (i / n) * 0.7 + drift * 0.3)), c = lerp3(cA, cB, f), k = (0.4 + 0.6 * depth) * bright;
+             ctx.fillStyle = `rgb(${Math.min(255,c[0]*k)|0},${Math.min(255,c[1]*k)|0},${Math.min(255,c[2]*k)|0})`; }
+      ctx.globalAlpha = (d.a == null ? 1 : d.a) * (0.42 + 0.58 * depth);
+      ctx.beginPath(); ctx.arc(d.x, d.y, d.r * (0.85 + 0.25 * depth), 0, 6.2832); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  // ---- render loop: ripple ALWAYS on. 60fps active/busy, ~16fps idle (cheap, never frozen). ----
+  let raf = 0, timer = 0, running = false;
+  const busyLike = () => active || (cur !== "idle" && cur !== "off");
+  const fps = () => busyLike() ? 60 : 16;
+  function tick() {
+    if (!running) return;
+    draw(performance.now() / 1000);
+    const f = fps();
+    if (f >= 60) raf = requestAnimationFrame(tick); else timer = setTimeout(() => { raf = requestAnimationFrame(tick); }, 1000 / f);
+  }
+  function start() { if (running) return; running = true; if (reduced.matches) { draw(1.2); return; } raf = requestAnimationFrame(tick); }
+  function stop() { running = false; cancelAnimationFrame(raf); clearTimeout(timer); }
+  document.addEventListener("visibilitychange", () => (document.visibilityState === "hidden" ? stop() : start()));
+  reduced.addEventListener("change", () => { stop(); start(); });
+
+  // ---- state ----
+  function setState(name, label) {
+    if (!STATES[name]) name = "idle";
+    cur = name; spec = STATES[name]; resolved = E.resolvePreset(spec.mode, 64);
+    const r = document.documentElement.style;
+    r.setProperty("--c1", spec.c1.join(",")); r.setProperty("--c2", spec.c2.join(","));
+    const lbl = label != null ? label : spec.label;
+    $("state-text").textContent = lbl;
+    canvas.setAttribute("aria-label", "JARVIS " + (lbl || "idle"));
+    busy = !["idle", "off", "starting", "success", "error", "listening", "learning"].includes(name);
+    document.body.classList.toggle("busy", busy);
+    if (reduced.matches) draw(1.2);
+    if (!running) start();
+    reportHit();
+  }
+
+  // ---- hit regions (click-through everywhere the island/menus are NOT) ----
+  function rectOf(el, pad) { const r = el.getBoundingClientRect(); pad = pad || 0; return [r.left - pad, r.top - pad, r.right + pad, r.bottom + pad]; }
+  let lastHit = "";
+  function reportHit() {
+    const rects = [rectOf($("island"), 2)];
+    if ($("menu").classList.contains("show")) rects.push(rectOf($("menu")));
+    if ($("confirm").classList.contains("show")) rects.push(rectOf($("confirm")));
+    const s = JSON.stringify(rects.map(r => r.map(Math.round)));
+    if (s !== lastHit) { lastHit = s; send({ t: "hit", rects: JSON.parse(s) }); }
+  }
+
+  // ---- transcript (persistent daily conversation) ----
+  const log = $("log"); let pendingEl = null;
+  const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
+  function msgNode(role, text, at) {
+    const d = document.createElement("div"); d.className = "msg " + (role === "user" ? "you" : "jarvis");
+    d.innerHTML = `<div class="who">${role === "user" ? "YOU" : "JARVIS"}${at ? ` <time>${esc(at)}</time>` : ""}</div><div class="body"></div>`;
+    d.querySelector(".body").textContent = text || ""; return d;
+  }
+  function atBottom() { return log.scrollTop + log.clientHeight >= log.scrollHeight - 40; }
+  function scrollDown() { log.scrollTop = log.scrollHeight; }
+  function renderTimeline(tl) {
+    pendingEl = null; log.innerHTML = "";
+    for (const it of (tl.items || [])) {
+      if (it.type === "session_start") { const s = document.createElement("div"); s.className = "divider"; s.textContent = "Session · " + it.at; log.appendChild(s); }
+      else if (it.type === "session_end") { const s = document.createElement("div"); s.className = "divider end"; s.textContent = "ended · " + it.at; log.appendChild(s); }
+      else if (it.type === "message") log.appendChild(msgNode(it.role, it.content, it.at));
+    }
+    $("date-label").textContent = tl.label || "Today";
+    $("date-prev").disabled = !tl.can_prev; $("date-next").disabled = !tl.can_next;
+    scrollDown();
+  }
+  function addUser(text, at) { pendingEl = null; const wasBottom = atBottom(); log.appendChild(msgNode("user", text, at)); if (wasBottom) scrollDown(); }
+  function streamDelta(text) {
+    const wasBottom = atBottom();
+    if (!pendingEl) { pendingEl = msgNode("jarvis", "", ""); pendingEl.classList.add("pending"); log.appendChild(pendingEl); }
+    pendingEl.querySelector(".body").textContent += text; if (wasBottom) scrollDown();
+  }
+  function commitAssistant(text, at) {
+    if (pendingEl) { pendingEl.classList.remove("pending"); if (text != null) pendingEl.querySelector(".body").textContent = text;
+      if (at) { const w = pendingEl.querySelector(".who"); if (!w.querySelector("time")) w.insertAdjacentHTML("beforeend", ` <time>${esc(at)}</time>`); } pendingEl = null; }
+    else if (text != null) addAssistant(text, at);
+  }
+  function addAssistant(text, at) { const wasBottom = atBottom(); log.appendChild(msgNode("jarvis", text, at)); if (wasBottom) scrollDown(); }
+  function setActivity(text) { $("activity").textContent = text || ""; }
+  function setStatus(st) {
+    const rows = [["Claude", st.claude], ["JEV", st.jev], ["Memory", st.memory], ["Voice", st.voice], ["Verify", st.verification], ["Tasks", st.tasks]];
+    let anyWarn = false, anyOk = false;
+    $("status").innerHTML = rows.map(([k, v]) => { v = v || {}; const cls = v.ok === true ? "ok" : v.ok === false ? "warn" : "";
+      if (v.ok === true) anyOk = true; if (v.ok === false) anyWarn = true;
+      return `<span class="s ${cls}" title="${esc(v.detail || "")}"><i></i><b>${k}</b>${v.text ? " <em>" + esc(v.text) + "</em>" : ""}</span>`; }).join("");
+    const h = $("health"); h.className = anyWarn ? "warn" : (anyOk ? "ok" : "");
+  }
+
+  // ---- activation (the island morphs) ----
+  function activate() { if (active) return; active = true; hideMenu(); send({ t: "activate" });
+    requestAnimationFrame(() => { document.body.classList.add("active"); $("island").setAttribute("aria-label", "JARVIS — open");
+      setTimeout(() => { $("input").focus(); reportHit(); scrollDown(); }, 210); });
+    reportHit(); }
+  function deactivate() { if (!active) return; active = false; document.body.classList.remove("active"); hideSettings();
+    hideMenu(); reportHit(); setTimeout(() => { send({ t: "deactivate" }); reportHit(); }, 360); }
+  $("bar").addEventListener("click", (e) => { if (e.target.closest(".hbtns")) return; e.stopPropagation(); active ? deactivate() : activate(); });
+  $("orb").addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); active ? deactivate() : activate(); } });
+  $("btn-close").addEventListener("click", (e) => { e.stopPropagation(); deactivate(); });
+  $("btn-stop").addEventListener("click", (e) => { e.stopPropagation(); send({ t: "stop" }); });
+  $("mic").addEventListener("click", () => send({ t: "listen_toggle" }));
+  $("date-prev").addEventListener("click", (e) => { e.stopPropagation(); send({ t: "history_nav", dir: -1 }); });
+  $("date-next").addEventListener("click", (e) => { e.stopPropagation(); send({ t: "history_nav", dir: 1 }); });
+  $("input").addEventListener("keydown", (e) => { if (e.key === "Enter") { const v = $("input").value.trim(); if (v) { $("input").value = ""; send({ t: "submit", text: v }); } } });
+  document.addEventListener("keydown", (e) => { if (e.key === "Escape") { if ($("settings").classList.contains("show")) hideSettings(); else if ($("menu").classList.contains("show")) hideMenu(); else if (active) deactivate(); } });
+
+  // ---- settings (status + controls) ----
+  function showSettings() { $("settings").classList.add("show"); reportHit(); }
+  function hideSettings() { $("settings").classList.remove("show"); reportHit(); }
+  $("btn-settings").addEventListener("click", (e) => { e.stopPropagation(); $("settings").classList.contains("show") ? hideSettings() : showSettings(); });
+  $("settings").addEventListener("click", (e) => { const b = e.target.closest("button[data-act]"); if (!b) return;
+    if (b.dataset.act !== "mute") hideSettings(); send({ t: "menu", action: b.dataset.act }); });
+
+  // ---- context menu ----
+  const menu = $("menu");
+  function showMenu() { menu.classList.add("show"); menu.setAttribute("aria-hidden", "false"); reportHit(); menu.querySelector("button").focus(); }
+  function hideMenu() { if (!menu.classList.contains("show")) return; menu.classList.remove("show"); menu.setAttribute("aria-hidden", "true"); reportHit(); }
+  document.addEventListener("contextmenu", (e) => { e.preventDefault(); menu.classList.contains("show") ? hideMenu() : showMenu(); });
+  document.addEventListener("click", (e) => { if (!menu.contains(e.target)) hideMenu(); if (!$("settings").contains(e.target) && !$("btn-settings").contains(e.target)) hideSettings(); });
+  menu.addEventListener("click", (e) => { const b = e.target.closest("button"); if (!b) return; hideMenu(); if (b.dataset.act === "activate") activate(); else send({ t: "menu", action: b.dataset.act }); });
+  menu.addEventListener("keydown", (e) => { const items = [...menu.querySelectorAll("button")], i = items.indexOf(document.activeElement);
+    if (e.key === "ArrowDown") { e.preventDefault(); items[(i + 1) % items.length].focus(); }
+    if (e.key === "ArrowUp") { e.preventDefault(); items[(i - 1 + items.length) % items.length].focus(); } });
+
+  // ---- confirm ----
+  let cid = null;
+  function askConfirm(id, title, text) { cid = id; $("confirm-text").textContent = title + "\n\n" + text; $("confirm").classList.add("show"); activate(); setTimeout(() => $("confirm-yes").focus(), 250); reportHit(); }
+  function answer(ok) { $("confirm").classList.remove("show"); if (cid != null) send({ t: "confirm", id: cid, ok }); cid = null; reportHit(); }
+  $("confirm-yes").addEventListener("click", () => answer(true)); $("confirm-no").addEventListener("click", () => answer(false));
+
+  // ---- bridge: Python → page ----
+  function setMute(lbl) { const b = $("mute-item"), b2 = $("mute-item2"); if (b) b.textContent = lbl; if (b2) b2.textContent = lbl; }
+  function push(m) {
+    if (m.state) setState(m.state, m.label);
+    if ("listening" in m) { listening = !!m.listening; $("mic").classList.toggle("on", listening); }
+    if ("speaking" in m) { speaking = !!m.speaking; }
+    if (m.activity != null) setActivity(m.activity);
+    if (m.transcript) renderTimeline(m.transcript);
+    if (m.user) addUser(m.user, m.at);
+    if (m.delta) streamDelta(m.delta);
+    if (m.commit) commitAssistant(m.commit.text, m.commit.at);
+    if (m.assistant) addAssistant(m.assistant, m.at);
+    if (m.system) setActivity(m.system);
+    if (m.error) { commitAssistant(null); const d = document.createElement("div"); d.className = "msg jarvis"; d.innerHTML = '<div class="who">JARVIS</div><div class="body" style="color:#ffb08a"></div>'; d.querySelector(".body").textContent = m.error; log.appendChild(d); scrollDown(); }
+    if (m.status) setStatus(m.status);
+    if (m.mute_label) setMute(m.mute_label);
+    if (m.activate) activate();
+    if (m.deactivate) deactivate();
+    if (m.confirm) askConfirm(m.confirm.id, m.confirm.title, m.confirm.text);
+  }
+  if (bridge) bridge.addEventListener("message", (ev) => { try { push(typeof ev.data === "string" ? JSON.parse(ev.data) : ev.data); } catch (e) { console.error(e); } });
+  window.jarvis = { push, state: () => ({ state: cur, active, listening, speaking }) };
+  setState("starting"); start();
+  window.addEventListener("resize", reportHit);
+  send({ t: "ready" }); reportHit();
+})();
+</script>
+</body>
+</html>

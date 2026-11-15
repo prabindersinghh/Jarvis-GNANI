@@ -1,0 +1,78 @@
+[
+  {
+    "task": "notepad_save_reopen",
+    "ok": true,
+    "turns": 6,
+    "claude_ms": 54603,
+    "connect_ms": 12812,
+    "tool_calls": 5,
+    "jarvis_tool_calls": 3,
+    "tools": {
+      "ToolSearch": 2,
+      "mcp__jarvis__computer_run": 3
+    },
+    "screenshots": 0,
+    "jev_calls": 0,
+    "uia_calls": 5,
+    "ocr": 1,
+    "tiers": {
+      "deterministic": 7
+    },
+    "input_tokens": 12,
+    "output_tokens": 1515,
+    "cache_read": 196775,
+    "cache_create": 21874,
+    "reply": "On it \u2014 running the whole Notepad sequence in one batch.The Save As dialog is up; targeting the filename edit box by id now and continuing.The file saved with the right content. Now closing Notepad an"
+  },
+  {
+    "task": "calculator",
+    "ok": true,
+    "turns": 3,
+    "claude_ms": 15402,
+    "connect_ms": 9757,
+    "tool_calls": 2,
+    "jarvis_tool_calls": 1,
+    "tools": {
+      "ToolSearch": 1,
+      "mcp__jarvis__computer_run": 1
+    },
+    "screenshots": 0,
+    "jev_calls": 0,
+    "uia_calls": 1,
+    "ocr": 0,
+    "tiers": {
+      "deterministic": 8
+    },
+    "input_tokens": 6,
+    "output_tokens": 521,
+    "cache_read": 79576,
+    "cache_create": 11980,
+    "reply": "Opening Calculator and typing it now.Done. Calculator shows 12 times 34 equals 408, verified from the display."
+  },
+  {
+    "task": "edge_form",
+    "ok": true,
+    "turns": 5,
+    "claude_ms": 59177,
+    "connect_ms": 11867,
+    "tool_calls": 4,
+    "jarvis_tool_calls": 3,
+    "tools": {
+      "ToolSearch": 1,
+      "mcp__jarvis__computer_run": 3
+    },
+    "screenshots": 0,
+    "jev_calls": 0,
+    "uia_calls": 6,
+    "ocr": 1,
+    "tiers": {
+      "deterministic": 3,
+      "uia": 2
+    },
+    "input_tokens": 10,
+    "output_tokens": 1602,
+    "cache_read": 160156,
+    "cache_create": 20228,
+    "reply": "Opening the page in Edge and filling the form now.The text went to the wrong target; the field is named \"Name field\". Retrying with the exact element.Done. The page showed \"CLICKED:Bob Marley\" after s"
+  }
+]

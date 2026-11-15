@@ -1,0 +1,14 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__jarvis__*",
+      "Read", "Grep", "Glob", "LS", "WebFetch", "WebSearch", "TodoWrite",
+      "Bash(git status:*)", "Bash(git diff:*)", "Bash(git log:*)", "Bash(git branch:*)",
+      "Bash(python -m pytest:*)", "Bash(npm test:*)", "Bash(npm run:*)", "Bash(dir:*)", "Bash(ls:*)"
+    ],
+    "deny": [
+      "Read(./data/config/.env)", "Read(**/.env)", "Read(**/*.pem)", "Read(**/id_rsa*)", "Read(~/.claude/.credentials.json)"
+    ]
+  },
+  "enableAllProjectMcpServers": true
+}
