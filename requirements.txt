@@ -20,3 +20,4 @@ pywin32==312
 sounddevice==0.5.6
 uiautomation==2.0.29
 graphifyy==0.9.65
+pytest==8.4.2

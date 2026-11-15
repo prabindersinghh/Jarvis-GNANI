@@ -136,6 +136,7 @@ $envFile = Join-Path $Root "data\config\.env"
 if (-not (Test-Path $envFile)) { Copy-Item (Join-Path $Root ".env.example") $envFile; Info "created data\config\.env (add TYPESAFE_API_KEY later — optional)" }
 & $py -m jarvis.app.icon (Join-Path $Root "launcher\jarvis.ico") | Out-Null
 & $py -m jarvis.ui.build | Out-Null
+if ($LASTEXITCODE) { Fail "orb UI build failed (third_party\thinking-orbs missing?). Re-clone the repo and re-run setup." }
 Ok "orb UI built"
 
 # ── 9. MCP servers + Claude Code workspace ───────────────────────────────────

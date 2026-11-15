@@ -136,25 +136,53 @@ Architectural wins that do not depend on machine load ([`benchmarks/latency/comp
 - **Outside the learner:** safety rules and the budget sit outside the RL layer, so learning can never relax them.
 - **Local by default:** audio, transcripts, memory and the memory graph never leave the machine.
 
-## Quick start
-
-**Requirements:** Windows 11 · Python 3.12 · an active Claude Code login · optional TypeSafe (JEV) key.
+## Quick start — two commands
 
 ```powershell
 git clone https://github.com/prabindersinghh/Jarvis-GNANI.git D:\JARVIS
-cd D:\JARVIS
-copy .env.example data\config\.env      # optional: paste TYPESAFE_API_KEY
-powershell -ExecutionPolicy Bypass -File launcher\install.ps1
+D:\JARVIS\setup.cmd
 ```
 
-The installer rebuilds the virtual environment, downloads the Whisper model, packages the app and places
-`JARVIS.lnk` on your desktop. Then:
+That's the whole install. Any folder works, not only `D:\JARVIS`. You can also double-click `setup.cmd`, or open
+the folder in Claude Code and type **`/setup`**.
+
+`setup` takes a bare Windows 10/11 machine to a running JARVIS. Every step is idempotent, so re-running it is safe:
+
+| | Installed and configured automatically |
+|---|---|
+| 1 | **Python 3.12** (via winget, if missing) |
+| 2 | **Claude Code CLI**, the brain (official installer, if missing) |
+| 3 | **WebView2 runtime** for the orb (if missing) |
+| 4 | Virtual environment and every pinned Python dependency |
+| 5 | **Whisper** speech model, downloaded locally |
+| 6 | **MCP servers** registered for this folder: `jarvis` (18 tools) and `windows-mcp` (63 admin tools) |
+| 7 | Claude Code workspace trust, so the servers load without prompts |
+| 8 | Orb UI build, data folders, secrets template |
+| 9 | Desktop shortcut **JARVIS** |
+| 10 | Self-test (imports + unit tests), then JARVIS launches |
+
+**The only manual step, done once per machine:** sign in to Claude Code by running `claude`. Setup tells you if
+it's needed.
+
+Then:
 
 1. Click **JARVIS** on the desktop. The orb appears bottom-right.
 2. Hold **Ctrl + Alt + J** and speak, or click the orb to type.
 3. Watch it work. No terminal or VS Code needed.
 
-Without a JEV key, JARVIS degrades gracefully to local UIA, OCR and vision tiers.
+Optional: add a TypeSafe key to `data\config\.env` (`TYPESAFE_API_KEY=…`) to enable the JEV reflex layer. Without
+it, JARVIS falls back to the local UIA, OCR and vision tiers.
+
+<details>
+<summary>Setup options</summary>
+
+```powershell
+D:\JARVIS\setup.cmd -NoLaunch        # don't start JARVIS at the end
+D:\JARVIS\setup.cmd -NoShortcut      # don't create the desktop shortcut
+D:\JARVIS\setup.cmd -NoWindowsMcp    # skip the 63-tool Windows-MCP server (saves Claude context)
+D:\JARVIS\setup.cmd -BuildExe        # also build dist\JARVIS.exe
+```
+</details>
 
 ## Development
 
@@ -181,7 +209,8 @@ jarvis/
   memory/ graph/  experience memory, private memory graph
   tasks/          durable tasks, watches, receipts, events
   ui/             orb (WebView2 composition host)
-launcher/         installer, launcher, desktop shortcut
+setup.cmd setup.ps1   one-command installer
+launcher/         launcher, desktop shortcut
 benchmarks/       latency + task + learning benchmarks
 tests/            136 tests (unit, integration, live)
 docs/             design, history, acceptance, usage
