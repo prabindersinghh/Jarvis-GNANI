@@ -14,6 +14,12 @@ Claude is the brain. Your desktop is the hands. Every action is verified.
 
 [Install](#install) · [How it works](#how-it-works) · [Tech stack](#tech-stack) · [Under the hood](#under-the-hood) · [Using JARVIS](#using-jarvis) · [Performance](#performance) · [Safety](#safety) · [Troubleshooting](#troubleshooting) · [FAQ](#faq)
 
+<br>
+
+<a href="docs/Jarvis-GNANI-one-pager.pdf"><img src="docs/Jarvis-GNANI-one-pager.jpg" width="420" alt="JARVIS · GNANI Edition one-page brief"></a>
+
+<sub><b>The one-pager</b> · <a href="docs/Jarvis-GNANI-one-pager.pdf">Download PDF</a></sub>
+
 </div>
 
 ---
