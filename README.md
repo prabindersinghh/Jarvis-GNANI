@@ -1,6 +1,6 @@
 <div align="center">
 
-# JARVIS · Gnani
+# JARVIS · Gnani.ai
 
 **A voice-controlled agent that operates your Windows PC.**<br>
 Claude is the brain. Your desktop is the hands. Every action is verified.
