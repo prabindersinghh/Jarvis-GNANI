@@ -795,7 +795,23 @@ def _warm_jev():
         log.debug("JEV warm-up skipped: %s", ex)
 
 
+def _pin_handshake_protocol() -> None:
+    """Serve the classic `initialize` handshake protocol only.
+
+    mcp>=2 decides a stdio connection's protocol from the first frame it reads. This server takes several seconds to
+    import, so Claude Code's modern-protocol probe times out and it falls back to `initialize` on the same pipe, but by
+    then the buffered probe has already locked the connection to the modern protocol and the fallback is rejected
+    (-32022). Pinning the handshake protocol makes startup speed irrelevant; every Claude Code version speaks it.
+    """
+    try:
+        import mcp.server.runner as _runner
+        _runner._has_modern_envelope = lambda params: False
+    except Exception as ex:  # older/newer mcp without the dual-era runner: nothing to pin
+        log.debug("protocol pin skipped: %s", ex)
+
+
 def main() -> None:
+    _pin_handshake_protocol()
     log.info("JARVIS MCP server starting (root=%s, jev=%s)", config.ROOT, bool(config.jev_api_key()))
     import threading
     threading.Thread(target=_warm_jev, daemon=True).start()

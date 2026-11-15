@@ -40,7 +40,7 @@ function Refresh-Path {
 function Has-Winget { [bool](Get-Command winget -ErrorAction SilentlyContinue) }
 
 Write-Host ""
-Write-Host "  JARVIS · GNANI Edition — setup" -ForegroundColor White
+Write-Host "  JARVIS - GNANI Edition setup" -ForegroundColor White
 Write-Host "  Installing into: $Root" -ForegroundColor DarkGray
 
 # ── 1. Windows ───────────────────────────────────────────────────────────────
