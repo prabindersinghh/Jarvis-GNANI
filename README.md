@@ -1,6 +1,6 @@
 <div align="center">
 
-# JARVIS · GNANI Edition
+# JARVIS · Gnani
 
 **A voice-controlled agent that operates your Windows PC.**<br>
 Claude is the brain. Your desktop is the hands. Every action is verified.
@@ -38,13 +38,13 @@ the rename happened, then tells you in a sentence. Anything destructive waits fo
 
 | | |
 |---|---|
-| 🎙️ **Voice-first** | Gnani Prisma speech-to-text, adaptive end-of-turn detection, Timbre speech output, and interruptible replies. |
-| 🧠 **Claude as the brain** | Runs on your own Claude Code login through the official Agent SDK. Claude plans and reasons; it never micromanages clicks. |
-| ⚡ **Cheapest path first** | Shortcuts and UI Automation before any model. A control is found in ~3 ms. Screenshots are the last resort, not the loop. |
-| ✅ **Verified, not assumed** | Every tool reports whether the outcome actually happened. Stale screens are rejected and re-observed. |
-| 🛡️ **Safe by construction** | Deletes, payments, credentials, registry and publishing need your confirmation. UAC, MFA and CAPTCHA are never bypassed. |
-| 📈 **Learns your machine** | A local learning layer turns repeated decisions into instant local ones. Memory and a private knowledge graph stay on disk. |
-| 🔮 **Lives on your desktop** | A floating, truly transparent orb that mirrors what JARVIS is doing. No terminal and no IDE needed. |
+| **Voice-first** | Gnani Prisma speech-to-text, adaptive end-of-turn detection, Timbre speech output, and interruptible replies. |
+| **Claude as the brain** | Runs on your own Claude Code login through the official Agent SDK. Claude plans and reasons; it never micromanages clicks. |
+| **Cheapest path first** | Shortcuts and UI Automation before any model. A control is found in ~3 ms. Screenshots are the last resort, not the loop. |
+| **Verified, not assumed** | Every tool reports whether the outcome actually happened. Stale screens are rejected and re-observed. |
+| **Safe by construction** | Deletes, payments, credentials, registry and publishing need your confirmation. UAC, MFA and CAPTCHA are never bypassed. |
+| **Learns your machine** | A local learning layer turns repeated decisions into instant local ones. Memory and a private knowledge graph stay on disk. |
+| **Lives on your desktop** | A floating, truly transparent orb that mirrors what JARVIS is doing. No terminal and no IDE needed. |
 
 ## Install
 
@@ -506,11 +506,3 @@ the Windows engine from [sshh12/windows-computer-use-mcp](https://github.com/ssh
 graphifyy, and Anthropic's [Claude Agent SDK](https://github.com/anthropics/claude-agent-sdk-python).
 
 ---
-
-<div align="center">
-
-Built by **[Prabinder Singh](https://github.com/prabindersinghh)**
-
-If JARVIS is useful to you, a ⭐ helps others find it.
-
-</div>
