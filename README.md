@@ -12,7 +12,7 @@ Claude is the brain. Your desktop is the hands. Every action is verified.
 [![Voice](https://img.shields.io/badge/speech-local%20Whisper-111111)](#privacy)
 [![Install](https://img.shields.io/badge/install-2%20commands-2EA043)](#install)
 
-[Install](#install) · [How it works](#how-it-works) · [Using JARVIS](#using-jarvis) · [Performance](#performance) · [Safety](#safety) · [Troubleshooting](#troubleshooting) · [FAQ](#faq)
+[Install](#install) · [How it works](#how-it-works) · [Tech stack](#tech-stack) · [Under the hood](#under-the-hood) · [Using JARVIS](#using-jarvis) · [Performance](#performance) · [Safety](#safety) · [Troubleshooting](#troubleshooting) · [FAQ](#faq)
 
 </div>
 
@@ -158,6 +158,181 @@ fresh look at the screen before anything is retried. Sending input is never take
 
 The same server works in any Claude Code session opened in this folder, not just the voice app.
 
+## Tech stack
+
+| Layer | Technology | Version | Why |
+|---|---|---|---|
+| **Reasoning** | Claude Code CLI + [`claude-agent-sdk`](https://github.com/anthropics/claude-agent-sdk-python) | 0.2.157 | Uses your own Claude Code login, streams partial messages, and hosts MCP servers in-process config |
+| **Tool protocol** | [Model Context Protocol](https://modelcontextprotocol.io) Python SDK (`mcp`), stdio transport | 2.2.0 | A standard, compact tool surface any Claude Code session can attach to |
+| **Speech-to-text** | [`faster-whisper`](https://github.com/SYSTRAN/faster-whisper) on CTranslate2, int8 on CPU | 1.2.1 · 4.8.2 | About 1 s per utterance on a laptop CPU, with no GPU and no cloud |
+| **Voice activity** | Silero VAD on ONNX Runtime + RMS energy gate | 1.30.0 | Cheap speech/silence decisions feeding the adaptive endpointer |
+| **Audio I/O** | `sounddevice` (PortAudio), resampled to 16 kHz mono | 0.5.6 | Device-rate capture with any microphone |
+| **Text-to-speech** | Windows SAPI (`SAPI.SpVoice`) via `pywin32` | 312 | Local voices, no network, interruptible mid-sentence |
+| **UI Automation** | `uiautomation` (Microsoft UIA COM) | 2.0.29 | Structured element tree: roles, names, automation ids, patterns |
+| **Input** | Win32 `SendInput` via `ctypes` (scan codes + Unicode) | n/a | Works in apps and games that ignore virtual-key events |
+| **Capture** | `mss` (GDI BitBlt) + `PrintWindow(PW_RENDERFULLCONTENT)` | 10.2.0 | Fast desktop capture, and correct pixels even for GPU-composited windows |
+| **OCR** | Built-in `Windows.Media.Ocr` through WinRT | OS | On-device OCR with zero extra installs |
+| **Reflex decisions** | TypeSafe **JEV** `/v1/systemone` over `httpx` (HTTP/2) | 0.28.1 | About 0.4 s structured choice among UI candidates, priced per input token |
+| **Orb UI** | WebView2 **composition controller** + DirectComposition, hosted through `pythonnet` | 3.1.0 | True per-pixel alpha on the desktop using only signed Windows components |
+| **Orb visuals** | thinking-orbs engine (vendored), inlined into one HTML page | vendored | A state-driven animated orb with no build server |
+| **Tray & hotkeys** | `pystray`, `pynput` | 0.19.5 · 1.8.2 | System tray menu and global push-to-talk |
+| **Process & system** | `psutil`, `pywin32`, `ctypes` (user32, shcore, d3d11, dcomp) | 7.2.2 | Window, process and DPI control without native builds |
+| **Imaging** | `pillow`, `numpy` | 12.3.0 · 2.5.3 | Downscaling, encoding and RMS math |
+| **Storage** | SQLite (daily conversations), JSONL (experience), atomic JSON (policies, graph, budget) | stdlib | Local, inspectable, crash-safe |
+| **Codebase graph** | `graphifyy` (tree-sitter) | 0.9.65 | A queryable architecture graph of this repo, fully local |
+| **Admin tools** | [Windows-MCP](https://github.com/danielsimonjr/Windows-MCP) (.NET 9, prebuilt) | 2a74b3e | Optional registry, services, firewall, event log and WMI tools |
+| **Packaging** | `pyinstaller`, PowerShell installer, signed `pythonw.exe` shortcut | 6.22.3 | One-command setup that works under Smart App Control |
+| **Tests** | `pytest` with unit, integration and `-m live` desktop suites | 8.4.2 | Live tests drive real Notepad and Calculator windows |
+
+Runtime: **Python 3.12** on **Windows 11**. No GPU, Docker, .NET SDK or Node.js is required at runtime.
+
+## Under the hood
+
+A deeper look at how each subsystem works. File references point at the implementation.
+
+### Request lifecycle
+
+```mermaid
+sequenceDiagram
+    participant U as You
+    participant V as Voice (local)
+    participant C as Claude Code
+    participant M as JARVIS MCP
+    participant W as Windows
+    U->>V: hold Ctrl+Alt+J and speak
+    V->>V: VAD, adaptive endpoint, Whisper
+    V-->>U: "On it." (~90 ms, local)
+    V->>C: transcript + memory block
+    C->>M: computer_run([...steps, expect])
+    M->>W: deterministic / UIA / JEV / OCR
+    W-->>M: new state
+    M->>M: verify each step, reject stale state
+    M-->>C: results + verification
+    C-->>V: reply text (streamed)
+    V-->>U: spoken clause by clause
+```
+
+### Windows engine · `jarvis/computer/engine`
+
+- **DPI first.** Before any capture or input, the process sets **per-monitor-v2** DPI awareness (falling back to
+  per-monitor, then system). Capture, `GetWindowRect` and `SendInput` then all agree on physical pixels, so clicks land
+  correctly at 125% and 150% scaling and across mixed-DPI monitors.
+- **Two capture paths.** `mss` (GDI BitBlt) grabs any physical rectangle of the virtual desktop.
+  `PrintWindow(PW_RENDERFULLCONTENT)` captures one window's own pixels, even when it's covered or GPU-composited,
+  where a screen BitBlt would come back black.
+- **Input via `SendInput`** with hardware scan codes (`KEYEVENTF_SCANCODE`) and Unicode text (`KEYEVENTF_UNICODE`).
+  Text is pasted first and read back from the field. On a mismatch, or in a field that rejects paste, it falls back to
+  paced `SendInput`, one character per event, because WinUI apps (for example, the Windows 11 Notepad) corrupt batched
+  Unicode input.
+- **OCR** uses the OS's own `Windows.Media.Ocr` through WinRT: frames go to a `SoftwareBitmap` and then to an `OcrEngine`
+  for the user's language. The line bounding boxes double as click targets.
+- The engine is vendored from [sshh12/windows-computer-use-mcp](https://github.com/sshh12/windows-computer-use-mcp)
+  (MIT), chosen over seven alternatives in [`docs/FOUNDATION_DECISION.md`](docs/FOUNDATION_DECISION.md).
+
+### Stale-state protection · `jarvis/state/store.py`
+
+Every observation gets an identity: a monotonically increasing `capture_id`, a timestamp, the target window (hwnd,
+title, process) and a **SHA-1 fingerprint** over the compact element list (`role|name|bounds`). An action referencing
+`capture_id N` runs only if N is still the latest observation **and** the live fingerprint of that window still matches.
+Otherwise `StaleStateError` is raised and the caller re-observes, regenerates candidates and decides again. Coordinates
+are never fired at a screen that has changed. Observations younger than 400 ms skip the second UIA walk, which saves
+about 130 ms per click.
+
+### Router · `jarvis/orchestrator/router.py`
+
+`resolve_target()` turns a target spec into exactly one element or point and records which tier resolved it. Accepted
+specs: `{"id": 7}` (an element from the last observation), `{"x":…, "y":…}` (needs a `capture_id`), `{"name": "Save",
+"role": "button"}`, `{"automation_id": …}`, or `{"text": …}` (OCR allowed). A unique UIA match executes directly.
+Several matches go to the learned policy, then JEV, then a local tie-breaker, then `needs_vision`. `execute()` wraps
+every action with the stale-state check, the safety policy and a post-action verification
+([`verify.py`](jarvis/orchestrator/verify.py)).
+
+`computer_run` executes a whole batch of steps with `expect` checkpoints in a single tool call. It stops at the first
+failure and returns the trace plus a fresh observation. `computer_act` hands a visible multi-step UI goal to a local
+observe, decide, execute, verify loop so Claude isn't consulted for every click.
+
+### JEV reflex layer · `jarvis/jev`
+
+JEV is used only for **ambiguous** choices. One `POST /v1/systemone` request carries an *operation* head and a
+speculative *target* head, and only the target head that matches the chosen operation is used. This design is adapted
+from [browser-use/jev-ultrafast](https://github.com/browser-use/jev-ultrafast). Output tokens are free, so the extra head
+saves a round trip at almost no cost. The adapter handles timeouts, bounded retry with backoff on 429/503/529,
+cancellation through a `threading.Event`, response validation and a pre-warmed HTTP/2 connection. A local, persisted
+**budget guard** stops spending at 90% of the ₹1,000 monthly ceiling and fails closed. With no key, the adapter raises
+`JevUnavailable` and routing falls through to the next tier.
+
+### Learning layer · `jarvis/learning`
+
+A **contextual bandit** sits on the router's decision hook. The *context* is a privacy-safe hash of the app, a coarse
+set of candidate signatures, goal keywords and a candidate-count bucket. The text is redacted before hashing, and no
+pixels or raw content are used. The *arms* are candidate signatures (`role|name`). An arm is served only after
+**≥ 3 trials** and a **Wilson lower confidence bound ≥ 0.72** on verified success (z = 1.28). Otherwise the policy
+defers to the normal tiers.
+
+Rewards lie in [−2, 2]. Verified correctness dominates, tier cost is secondary (JEV 0.06, OCR 0.04, vision 0.12), and a
+blocked or denied action is a hard negative, so the policy learns where the boundary is, never a way around it. A
+**candidate** policy learns online, while a **production** policy serves decisions. The candidate is promoted only on
+measured improvement and rolled back on regression, with atomic, versioned persistence.
+
+### Voice pipeline · `jarvis/voice`
+
+- **Capture** at the device rate, resampled to **16 kHz mono**. An RMS gate and Silero VAD decide what is speech.
+- **Adaptive endpointing** (`endpoint.py`) is a small state machine (`IDLE → SPEAKING → POSSIBLE_END → FINALIZED`).
+  The trailing silence it needs depends on what was just said: **0.55 s** for a short, fluent command, **0.8 s** by
+  default, and up to **1.3 s** once you've hesitated. Quick commands finalize fast, and nobody gets cut off mid-thought.
+- **Transcription** with `faster-whisper` `base.en`, int8 on the CPU. The model is stored in `models/`.
+- **Instant acknowledgement** (`ack.py`). For task-like requests, a local "On it." plays in about 90 ms, long before
+  Claude's first token.
+- **Streaming speech.** Claude's reply is cut into complete clauses as it streams and spoken right away through SAPI.
+- **Barge-in** (`bargein.py`). Microphone frames are analysed even while JARVIS talks. Sustained speech above a raised
+  threshold (0.035 RMS for at least 220 ms) interrupts the reply, so a cough, a click or JARVIS's own echo doesn't.
+
+### Orb · `jarvis/ui/comphost.py`
+
+A WinForms-hosted WebView2 renders into an opaque surface, so real transparency is impossible that way. JARVIS instead
+drives WebView2's **composition controller** into a **DirectComposition** visual on a `WS_EX_NOREDIRECTIONBITMAP`
+window, so DWM composites the orb onto the desktop with true per-pixel alpha. The rest of the desktop stays clickable
+through hit-test regions. The host pumps its own STA message loop, forwards mouse and focus input, and sets
+`RasterizationScale` to the monitor's DPI. Everything it touches (user32, d3d11, dcomp and
+`Microsoft.Web.WebView2.Core.dll`) is a signed component, which matters under Smart App Control. The orb's state is
+driven entirely by real runtime events.
+
+### Memory, history and graph
+
+| Store | Format | Contents |
+|---|---|---|
+| `data/memory/*.jsonl`, `preferences.json` | JSONL / JSON | Preferences, working workflows, corrections, app quirks, failures to avoid |
+| `data/memory/conversations/history.db` | SQLite | One conversation per day. Shown in the panel, never sent wholesale to Claude |
+| `data/graph/memory_graph.json` | Typed graph, atomic write + fsync | day → session → turn → app → tool → outcome → topic, redacted and bounded |
+| `data/policies/` | Versioned JSON | Production and candidate learning policies |
+
+The relevant slice of memory is injected as a `<memory>` block before each request. The memory graph exports to
+graphify's `graph.json` format, so one set of tools can visualise both JARVIS's experience and its codebase.
+
+### Events and tasks · `jarvis/tasks`
+
+An in-process, thread-safe pub/sub bus carries every runtime event: run and task lifecycle, tool calls, streamed
+messages, voice, TTS, JEV and verification. Event names follow **AG-UI** where an equivalent exists (`RUN_STARTED`,
+`TOOL_CALL_START`, `STATE_DELTA`, …), so the stream can later be served to a phone or web client unchanged. A bounded
+ring buffer gives late subscribers a snapshot. On top of the bus sits a durable task engine with an explicit state
+machine (created → queued → planning → running → verifying → completed, plus waiting, needs-input, paused, failed
+and cancelled), receipts, follow-ups, watches and
+notifications.
+
+### Safety policy · `jarvis/safety`
+
+Every action is classified as **safe**, **confirm** or **blocked** before it runs. Confirmation dialogs come from the
+engine, so the model can't skip them. Privacy controls redact secrets and personal data from everything sent to Claude
+(`redact_cloud`), mask password, PIN, OTP and card fields, and refuse to observe or capture windows whose titles match
+`blocked_titles` (by default 1Password, Bitwarden, KeePass, LastPass, Credential Manager, InPrivate and private browsing).
+
+### MCP transport note
+
+The server is launched over **stdio** by Claude Code (or by the Agent SDK inside the app). Because it takes several
+seconds to import, it pins the classic `initialize` handshake rather than relying on `mcp`'s first-frame protocol
+detection. A slow start can therefore never lock a connection to a protocol the client has already moved on from. See
+`_pin_handshake_protocol()` in [`server.py`](jarvis/computer/server.py).
+
 ## Using JARVIS
 
 1. Double-click **JARVIS** on the desktop. The orb appears bottom-right, with a tray icon.
@@ -298,7 +473,7 @@ docs/                   design, history, acceptance, usage
 |---|---|
 | [`docs/USAGE.md`](docs/USAGE.md) | Day-to-day use, in depth |
 | [`docs/PROJECT_HISTORY.md`](docs/PROJECT_HISTORY.md) | How JARVIS was built, phase by phase |
-| [`docs/FOUNDATION_DECISION.md`](docs/FOUNDATION_DECISION.md) | Why this engine over eight alternatives |
+| [`docs/FOUNDATION_DECISION.md`](docs/FOUNDATION_DECISION.md) | Why this engine over seven alternatives |
 | [`PRD.md`](PRD.md) · [`TRD.md`](TRD.md) | Product and technical requirements |
 | [`docs/RL_LEARNING.md`](docs/RL_LEARNING.md) | The learning layer |
 | [`docs/GRAPH.md`](docs/GRAPH.md) | Memory graph and codebase graph |
